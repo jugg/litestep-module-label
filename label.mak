@@ -44,10 +44,11 @@ CLEAN :
 	-@erase "$(INTDIR)\bangCommands.obj"
 	-@erase "$(INTDIR)\DefaultTexture.obj"
 	-@erase "$(INTDIR)\Font.obj"
-	-@erase "$(INTDIR)\GradientTexture.obj"
 	-@erase "$(INTDIR)\ImageTexture.obj"
 	-@erase "$(INTDIR)\Label.obj"
 	-@erase "$(INTDIR)\main.obj"
+	-@erase "$(INTDIR)\processor.obj"
+	-@erase "$(INTDIR)\SystemInfo.obj"
 	-@erase "$(INTDIR)\utility.obj"
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(OUTDIR)\label.dll"
@@ -70,10 +71,11 @@ LINK32_OBJS= \
 	"$(INTDIR)\bangCommands.obj" \
 	"$(INTDIR)\DefaultTexture.obj" \
 	"$(INTDIR)\Font.obj" \
-	"$(INTDIR)\GradientTexture.obj" \
 	"$(INTDIR)\ImageTexture.obj" \
 	"$(INTDIR)\Label.obj" \
 	"$(INTDIR)\main.obj" \
+	"$(INTDIR)\processor.obj" \
+	"$(INTDIR)\SystemInfo.obj" \
 	"$(INTDIR)\utility.obj"
 
 "$(OUTDIR)\label.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -96,10 +98,11 @@ CLEAN :
 	-@erase "$(INTDIR)\bangCommands.obj"
 	-@erase "$(INTDIR)\DefaultTexture.obj"
 	-@erase "$(INTDIR)\Font.obj"
-	-@erase "$(INTDIR)\GradientTexture.obj"
 	-@erase "$(INTDIR)\ImageTexture.obj"
 	-@erase "$(INTDIR)\Label.obj"
 	-@erase "$(INTDIR)\main.obj"
+	-@erase "$(INTDIR)\processor.obj"
+	-@erase "$(INTDIR)\SystemInfo.obj"
 	-@erase "$(INTDIR)\utility.obj"
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
@@ -123,10 +126,11 @@ LINK32_OBJS= \
 	"$(INTDIR)\bangCommands.obj" \
 	"$(INTDIR)\DefaultTexture.obj" \
 	"$(INTDIR)\Font.obj" \
-	"$(INTDIR)\GradientTexture.obj" \
 	"$(INTDIR)\ImageTexture.obj" \
 	"$(INTDIR)\Label.obj" \
 	"$(INTDIR)\main.obj" \
+	"$(INTDIR)\processor.obj" \
+	"$(INTDIR)\SystemInfo.obj" \
 	"$(INTDIR)\utility.obj"
 
 "$(OUTDIR)\label.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -192,11 +196,6 @@ SOURCE=.\Font.cpp
 "$(INTDIR)\Font.obj" : $(SOURCE) "$(INTDIR)"
 
 
-SOURCE=.\GradientTexture.cpp
-
-"$(INTDIR)\GradientTexture.obj" : $(SOURCE) "$(INTDIR)"
-
-
 SOURCE=.\ImageTexture.cpp
 
 "$(INTDIR)\ImageTexture.obj" : $(SOURCE) "$(INTDIR)"
@@ -210,6 +209,16 @@ SOURCE=.\Label.cpp
 SOURCE=.\main.cpp
 
 "$(INTDIR)\main.obj" : $(SOURCE) "$(INTDIR)"
+
+
+SOURCE=.\processor.cpp
+
+"$(INTDIR)\processor.obj" : $(SOURCE) "$(INTDIR)"
+
+
+SOURCE=.\SystemInfo.cpp
+
+"$(INTDIR)\SystemInfo.obj" : $(SOURCE) "$(INTDIR)"
 
 
 SOURCE=.\utility.cpp

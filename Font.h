@@ -10,6 +10,7 @@ public:
 
 	void configure(const string &prefix);
 	void apply(HDC hDC, int x, int y, int width, int height, const string &text, unsigned int flags);
+	void measure(HDC hDC, const string &text, unsigned int flags, int *width, int *height);
 
 private:
 

@@ -10,6 +10,7 @@ using namespace std;
 typedef list<string> StringList;
 typedef list<string>::iterator StringListIterator;
 typedef bool boolean;
+typedef __int64 largeInt;
 
 #define WIN32_LEAN_AND_MEAN
 #define STRICT

@@ -110,10 +110,6 @@ SOURCE=.\Font.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\GradientTexture.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\ImageTexture.cpp
 # End Source File
 # Begin Source File
@@ -123,6 +119,14 @@ SOURCE=.\Label.cpp
 # Begin Source File
 
 SOURCE=.\main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\processor.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\SystemInfo.cpp
 # End Source File
 # Begin Source File
 
@@ -138,6 +142,10 @@ SOURCE=.\bangCommands.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\BlankTexture.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\common.h
 # End Source File
 # Begin Source File
@@ -150,15 +158,19 @@ SOURCE=.\Font.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\GradientTexture.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\ImageTexture.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\Label.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\processor.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\SystemInfo.h
 # End Source File
 # Begin Source File
 

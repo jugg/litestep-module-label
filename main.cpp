@@ -1,6 +1,6 @@
 #include "common.h"
 #include "Label.h"
-// #include "SystemInfo.h"
+#include "SystemInfo.h"
 
 typedef list<Label *> LabelList;
 typedef list<Label *>::iterator LabelListIterator;
@@ -14,7 +14,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			strcpy((char *) lParam, "Label 1.0 (Maduin)");
+			strcpy((char *) lParam, "Label 1.2 (Maduin)");
 			return strlen((char *) lParam);
 		}
 
@@ -90,7 +90,7 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 		(WPARAM) messageHandler,
 		(LPARAM) lsMessages);
 
-	// systemInfo = new SystemInfo();
+	systemInfo = new SystemInfo();
 	StringList labelNames = GetRCNameList("Labels", "", "Label");
 
 	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
@@ -118,7 +118,7 @@ void quitModule(HINSTANCE hInstance)
 	DestroyWindow(messageHandler);
 	UnregisterClass("LabelMessageHandlerLS", hInstance);
 
-	// delete systemInfo;
+	delete systemInfo;
 }
 
 Label *lookupLabel(const string &name)

@@ -2,7 +2,7 @@
 #include "bangCommands.h"
 #include "Font.h"
 #include "Label.h"
-// #include "SystemInfo.h"
+#include "SystemInfo.h"
 #include "Texture.h"
 
 #define TIMER_MOUSETRACK 1
@@ -142,7 +142,17 @@ void Label::setJustify(int justify)
 
 void Label::setText(const string &text)
 {
-	this->text = text;
+	this->originalText = text;
+	this->text = systemInfo->processLabelText(text, &dynamicText);
+
+	if(hWnd != 0)
+	{
+		if(dynamicText)
+			SetTimer(hWnd, TIMER_UPDATE, 1000, 0);
+		else
+			KillTimer(hWnd, TIMER_UPDATE);
+	}
+
 	repaint();
 }
 
@@ -270,6 +280,7 @@ void Label::show()
 			this);
 
 		setAlwaysOnTop(alwaysOnTop);
+		if(dynamicText) SetTimer(hWnd, TIMER_UPDATE, 1000, 0);
 	}
 
 	visible = true;
@@ -492,7 +503,8 @@ void Label::onTimer(int timerID)
 	}
 	else if(timerID == TIMER_UPDATE)
 	{
-		// ...
+		text = systemInfo->processLabelText(originalText);
+		repaint();
 	}
 }
 

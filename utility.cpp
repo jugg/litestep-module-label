@@ -64,7 +64,8 @@ int GetRCColor(const string &prefix, const string &baseName, int defaultVal)
 int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal)
 {
 	string strVal = GetRCString(prefix, baseName, "");
-	strVal = strVal.substr(strVal.find_first_not_of(" \t"));
+	int start = strVal.find_first_not_of(" \t");
+	if(start < strVal.length()) strVal = strVal.substr(start);
 
 	if(strVal.length() == 0)
 		return defaultVal;
@@ -120,7 +121,8 @@ int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal
 int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal)
 {
 	string strVal = GetRCString(prefix, baseName, "");
-	strVal = strVal.substr(strVal.find_first_not_of(" \t"));
+	int start = strVal.find_first_not_of(" \t");
+	if(start < strVal.length()) strVal = strVal.substr(start);
 
 	if(strVal.length() == 0)
 		return defaultVal;

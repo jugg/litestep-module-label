@@ -84,8 +84,8 @@ private:
 
 	string name;
 
-	// boolean dynamicText;
-	// string sourceText;
+	boolean dynamicText;
+	string originalText;
 	string text;
 
 	boolean mousePressed;

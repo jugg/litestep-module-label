@@ -59,6 +59,11 @@ void Font::apply(HDC hDC, int x, int y, int width, int height, const string &tex
 	SetTextColor(hDC, textColor);
 }
 
+void Font::measure(HDC hDC, const string &text, unsigned int flags, int *width, int *height)
+{
+	// ...
+}
+
 void Font::createHandle()
 {
 	LOGFONT lf;
