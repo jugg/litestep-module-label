@@ -57,6 +57,13 @@ LabelSettings::LabelSettings()
 	rightDoubleClickCommand = GetRCLine(name, "OnRightDoubleClick", "");
 	enterCommand = GetRCLine(name, "OnMouseEnter", "");
 	leaveCommand = GetRCLine(name, "OnMouseLeave", "");
+
+	scrollPadLength = GetRCInt(name, "scrollPadLength", 10); 
+	scrollInterval = GetRCInt(name, "scrollInterval", 100);
+	scrollSpeed = GetRCInt(name, "scrollSpeed", 1);
+	scroll = GetRCBoolean(name, "scroll", false);
+
+	trueTransparency = GetRCBoolean(name, "trueTransparency", false);
 }
 
 LabelSettings::LabelSettings(const char *name)
@@ -98,6 +105,13 @@ LabelSettings::LabelSettings(const char *name)
 	rightDoubleClickCommand = GetRCLine(name, "OnRightDoubleClick", defaultSettings.rightDoubleClickCommand);
 	enterCommand = GetRCLine(name, "OnMouseEnter", defaultSettings.enterCommand);
 	leaveCommand = GetRCLine(name, "OnMouseLeave", defaultSettings.leaveCommand);
+
+	scrollPadLength = GetRCInt(name, "scrollPadLength", defaultSettings.scrollPadLength);
+	scrollInterval = GetRCInt(name, "scrollInterval", defaultSettings.scrollInterval);
+	scrollSpeed = GetRCInt(name, "scrollSpeed", defaultSettings.scrollSpeed);
+	scroll = GetRCBoolean(name, "scroll", defaultSettings.scroll);
+
+	trueTransparency = GetRCBoolean(name, "trueTransparency", defaultSettings.trueTransparency);
 }
 
 LabelSettings::~LabelSettings()

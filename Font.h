@@ -10,7 +10,7 @@ public:
 
 	void configure(const string &prefix, Font *baseFont);
 	void apply(HDC hDC, int x, int y, int width, int height, const string &text, unsigned int flags);
-	void measure(HDC hDC, const string &text, unsigned int flags, int *width, int *height);
+	void measure(HDC hDC, const string &text, unsigned int flags, long *width, long *height);
 	
 	void setColor(int aColor);
 	

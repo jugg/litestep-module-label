@@ -69,9 +69,21 @@ void Font::apply(HDC hDC, int x, int y, int width, int height, const string &tex
 	SetTextColor(hDC, textColor);
 }
 
-void Font::measure(HDC hDC, const string &text, unsigned int flags, int *width, int *height)
+void Font::measure(HDC hDC, const string &text, unsigned int flags, long *width, long *height)
 {
-	// ...
+	hFont=(HFONT) SelectObject(hDC, hFont);
+
+	LPSIZE lpsize=new SIZE;
+
+	lpsize->cx=300;
+	lpsize->cy=100;
+
+	GetTextExtentPoint32(hDC, text.c_str(), strlen(text.c_str()), lpsize);
+
+	hFont=(HFONT) SelectObject(hDC, hFont);
+
+	*width=lpsize->cx;
+	*height=lpsize->cy;
 }
 
 void Font::setColor(int aColor)

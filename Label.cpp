@@ -8,6 +8,7 @@
 
 #define TIMER_MOUSETRACK 1
 #define TIMER_UPDATE 2
+#define TIMER_SCROLL 3
 
 extern LabelList labelList;
 
@@ -39,7 +40,10 @@ Label::~Label()
 	RemoveBangCommands(name, bangCommands);
 
 	if(hWnd != 0)
+	{
+		KillTimer(hWnd, TIMER_SCROLL);
 		DestroyWindow(hWnd);
+	}
 
 	if(backgroundBitmap != 0)
 	{
@@ -100,8 +104,29 @@ void Label::reconfigure()
 	enterCommand = settings.enterCommand;
 	leaveCommand = settings.leaveCommand;
 
+	scrollPadLength = settings.scrollPadLength;
+	scrollInterval = settings.scrollInterval;
+	scrollSpeed = settings.scrollSpeed;
+	scroll = settings.scroll;
+
+	trueTransparency = settings.trueTransparency;
+
 	if(!settings.startHidden)
 		show();
+
+	if(background->isTransparent() && trueTransparency)
+	{
+		//set the window region that pink areas aren't part of it
+		HDC tmpDC=CreateCompatibleDC(NULL);
+		HBITMAP tmpBmp = CreateBitmap(width, height, 1, 32, NULL);
+		HGDIOBJ tmpObj = SelectObject(tmpDC, tmpBmp);
+		background->apply(tmpDC, 0, 0, width, height);
+		SelectObject(tmpDC, tmpObj);
+		SetWindowRgn(hWnd, BitmapToRegion(tmpBmp, RGB(255, 0, 255), 0, 0, 0), false);
+		DeleteObject(tmpBmp);
+		DeleteObject(tmpObj);
+		DeleteDC(tmpDC);
+	}
 
 	/*
 	int screenX = GetSystemMetrics(SM_CXSCREEN);
@@ -317,9 +342,11 @@ void Label::show()
 		setAlwaysOnTop(alwaysOnTop);
 		if(dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
 	}
-
 	visible = true;
 	ShowWindow(hWnd, SW_SHOWNOACTIVATE);
+
+	if(scroll)
+		SetTimer(hWnd, TIMER_SCROLL, scrollInterval, 0);
 }
 
 void Label::update()
@@ -510,13 +537,56 @@ void Label::onPaint(HDC hDC)
 	BitBlt(bufferDC, 0, 0, width, height, backgroundDC, 0, 0, SRCCOPY);
 
 	// render text
-	font->apply(bufferDC,
-		leftBorder,
-		topBorder,
-		width - leftBorder - rightBorder,
-		height - topBorder - bottomBorder,
-		text,
-		justify /* | DT_SINGLELINE */ | DT_VCENTER | DT_NOPREFIX);
+	long textWidth;
+	long textHeight;
+
+	font->measure(bufferDC, text, 0, &textWidth, &textHeight);
+
+	//don't scroll if text fits into label
+	if(!(scroll && textWidth > width - leftBorder - rightBorder))
+	{
+		font->apply(bufferDC,
+			leftBorder,
+			topBorder,
+			width - leftBorder - rightBorder,
+			height - topBorder - bottomBorder,
+			text,
+			justify /* | DT_SINGLELINE */ | DT_VCENTER | DT_NOPREFIX);
+	}
+	else
+	{
+		if(scrollPosition < 0)
+			scrollPosition=textWidth + scrollPadLength;
+
+		if(scrollPosition > textWidth + scrollPadLength )
+			scrollPosition=0;
+
+		HRGN oldRGN=NULL;
+		GetClipRgn(bufferDC, oldRGN);
+		HRGN newRGN=CreateRectRgn(leftBorder, topBorder, width - rightBorder, height - bottomBorder);
+		SelectClipRgn(bufferDC, newRGN);
+		DeleteObject(newRGN);
+
+		font->apply(bufferDC,
+			leftBorder,
+			topBorder,
+			scrollPosition - scrollPadLength,
+			height - topBorder - bottomBorder,
+			text,
+			DT_RIGHT | DT_VCENTER | DT_NOPREFIX);
+
+		font->apply(bufferDC,
+			scrollPosition + leftBorder,
+			topBorder,
+			textWidth,
+			height - topBorder - bottomBorder,
+			text,
+			DT_LEFT | DT_VCENTER | DT_NOPREFIX);
+
+		SelectClipRgn(bufferDC, oldRGN);
+		DeleteObject(oldRGN);
+	};
+
 
 	// blt the double buffer to the display
 	BitBlt(hDC, 0, 0, width, height, bufferDC, 0, 0, SRCCOPY);
@@ -546,24 +616,37 @@ void Label::onSize(int width, int height)
 
 void Label::onTimer(int timerID)
 {
-	if(timerID == TIMER_MOUSETRACK)
+	switch(timerID)
 	{
-		POINT pt;
-		GetCursorPos(&pt);
+		case TIMER_MOUSETRACK:
 
-		RECT rc;
-		GetWindowRect(hWnd, &rc);
+			POINT pt;
+			GetCursorPos(&pt);
 
-		if(!PtInRect(&rc, pt))
-		{
-			KillTimer(hWnd, TIMER_MOUSETRACK);
-			mouseInside = false;
-			onMouseLeave();
-		}
-	}
-	else if(timerID == TIMER_UPDATE)
-	{
-		update();
+			RECT rc;
+			GetWindowRect(hWnd, &rc);
+
+			if(!PtInRect(&rc, pt))
+			{
+				KillTimer(hWnd, TIMER_MOUSETRACK);
+				mouseInside = false;
+				onMouseLeave();
+			}
+
+		break;
+
+		case TIMER_UPDATE:
+
+			update();
+
+		break;
+
+		case TIMER_SCROLL:
+
+			scrollPosition-=scrollSpeed;
+			repaint();
+
+		break;
 	}
 }
 

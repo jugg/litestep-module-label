@@ -86,6 +86,14 @@ private:
 	int x;
 	int y;
 
+	int scrollPadLength;
+	int scrollInterval;
+	int scrollSpeed;
+	boolean scroll;
+	int scrollPosition;
+
+	boolean trueTransparency;
+
 	int updateInterval;
 	int justify;
 

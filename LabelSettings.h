@@ -34,6 +34,13 @@ public:
 	int x;
 	int y;
 
+	int scrollInterval;
+	int scrollSpeed;
+	int scrollPadLength;
+	boolean scroll;
+
+	boolean trueTransparency;
+
 	string text;
 
 	string leftClickCommand;

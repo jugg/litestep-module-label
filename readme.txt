@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.93
+                                Label 1.94
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
                         ilmcuts <ilmcuts@gmx.net>
-                        Last Modified: 05-12-2002
+                        Last Modified: 05-15-2002
 --------------------------------------------------------------------------
 
 Overview
@@ -103,6 +103,12 @@ in use then areas of the skin bitmap that are pink (RGB 255, 0, 255) will
 allow the desktop wallpaper to show through. If no skin is in use and this
 command is present then the entire label will be transparent.
 
+LabelTrueTransparency
+The command makes pink (RGB 255, 0, 255) areas in the background bitmap really
+transparent (eg you will see a window you drag below the label).
+Caution: This won't work with a blank background!
+Default is false.
+
 LabelFont <font>
 Sets the name of the font used to display text. If no value is provided
 then the default is "Arial".
@@ -180,6 +186,19 @@ Sets the name of the box (lsbox.dll) that this label should be loaded
 into. The default is no value in which case the label is loaded normally.
 See the section below entitled 'Using Labels inside LSBox' for more
 information.
+
+LabelScroll <bool> = false
+Tells weather to scroll or not
+
+LabelScrollInterval <int> = 200
+The time after which the text advances
+
+LabelScrollSpeed <int> = 1
+The amount of pixels the text moves after each scrollInterval
+(negative values invert the direction)
+
+LabelScrollPad <int> = 10
+The space between start and end of the text
 
 
 Bang Commands

@@ -25,6 +25,7 @@ private:
 	int imageWidth;
 
 	boolean transparent;
+	boolean trueTransparency;
 
 	int leftEdge;
 	int topEdge;

@@ -40,6 +40,7 @@ void ImageTexture::configure(const string &prefix, const string &subKey)
 	memoryBitmap = (HBITMAP) SelectObject(memoryDC, bitmap);
 
 	transparent = GetRCBoolean(prefix, "Transparent");
+	trueTransparency = GetRCBoolean(prefix, "TrueTransparency");
 
 	leftEdge = GetRCInt(prefix, "ImageLeftEdge", 0, 0);
 	topEdge = GetRCInt(prefix, "ImageTopEdge", 0, 0);
@@ -54,7 +55,7 @@ void ImageTexture::apply(HDC hDC, int x, int y, int width, int height)
 	if(bitmap == 0)
 		return;
 
-	if(transparent)
+	if(transparent && !trueTransparency)
 	{
 		HDC bufferDC = CreateCompatibleDC(hDC);
 		HBITMAP bufferBitmap = CreateCompatibleBitmap(hDC, width, height);
@@ -77,6 +78,7 @@ void ImageTexture::apply(HDC hDC, int x, int y, int width, int height)
 	}
 	else
 	{
+
 		SetStretchBltMode(hDC, STRETCH_DELETESCANS);
 
 		MultiBlt(hDC, x, y, width, height,

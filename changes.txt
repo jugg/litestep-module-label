@@ -1,3 +1,10 @@
+1.94, 05-15-2002
+- added LabelScroll
+- added LabelScrollInterval
+- added LabelScrollSpeed
+- added LabelScrollPad
+- added LabelTrueTransparency (transparency by changing the window region for pink areas in background bmp)
+
 1.93, 04-07-2002/05-12-2002 (ilmcuts)
 - added LabelBangCommands
 - added LabelUseFahrenheit
