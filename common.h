@@ -18,7 +18,7 @@ typedef list<Label *> LabelList;
 typedef list<Label *>::iterator LabelListIterator;
 
 typedef bool boolean;
-typedef __int64 largeInt;
+typedef unsigned __int64 largeInt;
 
 #define WIN32_LEAN_AND_MEAN
 #define STRICT

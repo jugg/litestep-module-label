@@ -36,18 +36,27 @@ private:
 	string getSwapInUse(boolean *dynamic);
 	string getSwapTotal(boolean *dynamic);
 
+	// power info
+	string getPowerSource(const vector<string> &arguments, boolean *dynamic);
+	string getBattery(boolean *dynamic);
+
 	// network-related info
 	string getComputerName(boolean *dynamic);
 	string getHostName(boolean *dynamic);
 	string getIP(boolean *dynamic);
 	string getUserName(boolean *dynamic);
 
-	// winamp info
+	// Winamp info
 	string getWinampSong(boolean *dynamic);
 	string getWinampTime(boolean *dynamic);
 	string getWinampRemainTime(boolean *dynamic);
 	string getWinampTotalTime(boolean *dynamic);
 	string getWinampStatus(boolean *dynamic);
+
+	// MotherBoard Monitor 5 (MBM5) info
+	string getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic);
+	string getMBMTemperature(const vector<string> &arguments, boolean *dynamic);
+	string getMBMVoltage(const vector<string> &arguments, boolean *dynamic);
 
 	// miscellaneous info
 	string getActiveTask(boolean *dynamic);

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
-                                Label 1.7
+                                Label 1.8
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
-                        Last Modified: 08-04-2001
+                        Last Modified: 08-25-2001
 --------------------------------------------------------------------------
 
 Overview
@@ -347,6 +347,9 @@ they take:
 activeTask
 Title of the currently active task.
 
+battery
+Percentage of battery power remaining.
+
 computerName
 Name assigned to this computer.
 
@@ -374,6 +377,18 @@ Internet Procotol (IP) address assigned to this computer.
 iTime
 Current time as Swatch internet time (beats).
 
+mbmFanSpeed
+Fan speed as reported by MBM5. Takes an optional numeric index as a
+parameter. MBM5 supports 4 fans numbered 1 to 4.
+
+mbmTemperature
+Temperature as reported by MBM5. Takes an optional numeric index as a
+parameter. MBM5 supports 10 temperature sensors numbered 1 to 10.
+
+mbmVoltage
+Voltage as reported by MBM5. Takes an optional numeric index as a
+parameter. MBM5 supports 7 voltages numbered 1 to 7.
+
 memAvailable
 Amount of physical memory currently available.
 
@@ -385,6 +400,10 @@ Total amount of physical memory in the system.
 
 os
 Name of the operating system running on this computer.
+
+powerSource('AC', 'Battery')
+Selects what text to display based on whether the system is running on AC
+or battery power. Defaults are 'AC' and 'Battery'.
 
 randomLine('file')
 Retrieves a randomly selected line from the given file.

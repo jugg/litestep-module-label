@@ -4,6 +4,18 @@
 #include "SystemInfo.h"
 #include "Label.h"
 
+const int numMBMTemperatures = 10;
+const int numMBMVoltages = 7;
+const int numMBMFans = 4;
+
+struct MBMSharedData {
+	int temperature[numMBMTemperatures];
+	double voltage[numMBMVoltages];
+	int fan[numMBMFans];
+	int MHz;
+	unsigned char numCPUs;
+};
+
 SystemInfo::SystemInfo()
 {
 	WSADATA wd;
@@ -170,6 +182,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 	
 	if(name == "activetask")
 		return getActiveTask(dynamic);
+	else if(name == "battery")
+		return getBattery(dynamic);
 	else if(name == "computername")
 		return getComputerName(dynamic);
 	else if(name == "cpu")
@@ -188,6 +202,12 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return getIP(dynamic);
 	else if(name == "itime")
 		return getInternetTime(dynamic);
+	else if(name == "mbmfanspeed")
+		return getMBMFanSpeed(arguments, dynamic);
+	else if(name == "mbmtemperature")
+		return getMBMTemperature(arguments, dynamic);
+	else if(name == "mbmvoltage")
+		return getMBMVoltage(arguments, dynamic);
 	else if(name == "memavailable")
 		return getMemAvailable(dynamic);
 	else if(name == "meminuse")
@@ -196,6 +216,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return getMemTotal(dynamic);
 	else if(name == "os")
 		return getOS(dynamic);
+	else if(name == "powersource")
+		return getPowerSource(arguments, dynamic);
 	else if(name == "randomline" && arguments.size() >= 1)
 		return getRandomLine(arguments[0], dynamic);
 	else if(name == "swapavailable")
@@ -263,6 +285,15 @@ string SystemInfo::process(const string &text, int &i, int length, Label *label,
 		
 		if(i < length) i++;
 		return literalValue;
+	}
+	else if(i < length && isdigit(text[i])) // is it a numeric constant?
+	{
+		string number;
+
+		while(i < length && isdigit(text[i]))
+			number.append(1, text[i++]);
+
+		return number;
 	}
 	else // otherwise its a name
 	{
@@ -368,7 +399,7 @@ string SystemInfo::getInternetTime(boolean *dynamic)
 	SYSTEMTIME st;
 	GetSystemTime(&st);
 
-	int seconds = (((st.wHour + 1) * 60) + st.wMinute) * 60 + st.wSecond;
+	int seconds = ((((st.wHour + 1) % 24) * 60) + st.wMinute) * 60 + st.wSecond;
 	int beats = (1000 * seconds) / 86400;
 
 	char output[8];
@@ -587,14 +618,14 @@ string SystemInfo::getUptime(const vector<string> &arguments, boolean *dynamic)
 {
 	if(dynamic) *dynamic = true;
 
-	int ms = GetTickCount();
-	int seconds = ms / 1000;
+	unsigned int ms = GetTickCount();
+	unsigned int seconds = ms / 1000;
 	ms %= 1000;
-	int minutes = seconds / 60;
+	unsigned int minutes = seconds / 60;
 	seconds %= 60;
-	int hours = minutes / 60;
+	unsigned int hours = minutes / 60;
 	minutes %= 60;
-	int days = hours / 24;
+	unsigned int days = hours / 24;
 	hours %= 24;
 
 	SYSTEMTIME st;
@@ -715,6 +746,156 @@ string SystemInfo::getWindowTitle(const string &windowClass, boolean *dynamic)
 	char buffer[256];
 	GetWindowText(hWnd, buffer, 256);
 	return string(buffer);
+}
+
+string SystemInfo::getPowerSource(const vector<string> &arguments, boolean *dynamic)
+{
+	if(dynamic) *dynamic = 1;
+
+	SYSTEM_POWER_STATUS sps;
+	GetSystemPowerStatus(&sps);
+
+	if(sps.ACLineStatus == 0)
+	{
+		if(arguments.size() >= 2)
+			return arguments[1];
+		else
+			return "Battery";
+	}
+	else
+	{
+		if(arguments.size() >= 1)
+			return arguments[0];
+		else
+			return "AC";
+	}
+}
+
+string SystemInfo::getBattery(boolean *dynamic)
+{
+	if(dynamic) *dynamic = 1;
+
+	SYSTEM_POWER_STATUS sps;
+	GetSystemPowerStatus(&sps);
+
+	if(sps.BatteryLifePercent > 100)
+		sps.BatteryLifePercent = 0;
+
+	char output[8];
+	sprintf(output, "%d%%", sps.BatteryLifePercent);
+	return string(output);
+}
+
+// -----------------------------------
+//  MotherBoard Monitor 5 (MBM5) info
+// -----------------------------------
+
+string SystemInfo::getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic)
+{
+	if(dynamic) *dynamic = 1;
+
+	int n = 0;
+	int value = 0;
+
+	if(arguments.size() >= 1)
+		n = atoi(arguments[0].c_str()) - 1;
+
+	if(n < 0) n = 0;
+	if(n >= numMBMFans) n = numMBMFans - 1;
+
+	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
+		FALSE,
+		"$M$B$M$5$D$");
+
+	if(hSharedData != INVALID_HANDLE_VALUE)
+	{
+		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
+			FILE_MAP_READ, 0, 0, 0);
+
+		if(pSharedData)
+		{
+			value = pSharedData->fan[n];
+			UnmapViewOfFile(pSharedData);
+		}
+
+		CloseHandle(hSharedData);
+	}
+
+	char output[16];
+	sprintf(output, "%d", value);
+	return string(output);
+}
+
+string SystemInfo::getMBMTemperature(const vector<string> &arguments, boolean *dynamic)
+{
+	if(dynamic) *dynamic = 1;
+
+	int n = 0;
+	int value = 0;
+
+	if(arguments.size() >= 1)
+		n = atoi(arguments[0].c_str()) - 1;
+
+	if(n < 0) n = 0;
+	if(n >= numMBMTemperatures) n = numMBMTemperatures - 1;
+
+	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
+		FALSE,
+		"$M$B$M$5$D$");
+
+	if(hSharedData != INVALID_HANDLE_VALUE)
+	{
+		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
+			FILE_MAP_READ, 0, 0, 0);
+
+		if(pSharedData)
+		{
+			value = pSharedData->temperature[n];
+			UnmapViewOfFile(pSharedData);
+		}
+
+		CloseHandle(hSharedData);
+	}
+
+	char output[16];
+	sprintf(output, "%d", value);
+	return string(output);
+}
+
+string SystemInfo::getMBMVoltage(const vector<string> &arguments, boolean *dynamic)
+{
+	if(dynamic) *dynamic = 1;
+
+	int n = 0;
+	double value = 0.0;
+
+	if(arguments.size() >= 1)
+		n = atoi(arguments[0].c_str()) - 1;
+
+	if(n < 0) n = 0;
+	if(n >= numMBMVoltages) n = numMBMVoltages - 1;
+
+	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
+		FALSE,
+		"$M$B$M$5$D$");
+
+	if(hSharedData != INVALID_HANDLE_VALUE)
+	{
+		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
+			FILE_MAP_READ, 0, 0, 0);
+
+		if(pSharedData)
+		{
+			value = pSharedData->voltage[n];
+			UnmapViewOfFile(pSharedData);
+		}
+
+		CloseHandle(hSharedData);
+	}
+
+	char output[16];
+	sprintf(output, "%.2f", value);
+	return string(output);
 }
 
 string SystemInfo::hideIfEmpty(const string &s, Label *label, boolean *dynamic)
@@ -870,7 +1051,7 @@ static const char *units[] = {
 
 string SystemInfo::formatByteSize(largeInt byteSize)
 {
-	int i = 0;
+	largeInt i = 0;
 	
 	if(byteSize & 0xF000000000000000) i++;
 	if(byteSize & 0xFFFC000000000000) i++;

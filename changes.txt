@@ -1,3 +1,8 @@
+1.8, 08-25-2001
+- added power management info: [powerSource], [battery]
+- added MotherBoard Monitor 5 info: [mbmFanSpeed], [mbmTemperature], [mbmVoltage]
+- bugfix: [itime] didn't always wrap around 1000 as it should
+
 1.7, 08-04-2001
 - added !LabelSetFontColor
 - added timezone support to [date] and [time]
