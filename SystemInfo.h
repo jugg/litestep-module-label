@@ -1,6 +1,8 @@
 #if !defined(__SYSTEMINFO_H)
 #define __SYSTEMINFO_H
 
+class Label;
+
 class SystemInfo
 {
 public:
@@ -8,42 +10,65 @@ public:
 	SystemInfo();
 	virtual ~SystemInfo();
 
-	string processLabelText(const string &text, boolean *dynamic = 0);
+	string processLabelText(const string &text, Label *label, boolean *dynamic = 0);
 
 private:
 
 	boolean usingCPU;
 
-	string evaluateFunction(const string &functionName, const string &argument, boolean *dynamic);
-	string process(const string &text, int &i, int length, boolean *dynamic);
+	string evaluateFunction(const string &functionName, const vector<string> &arguments, Label *label, boolean *dynamic);
+	string process(const string &text, int &i, int length, Label *label, boolean *dynamic);
 
-	string getActiveTask(const string &argument, boolean *dynamic);
-	string getComputerName(const string &argument, boolean *dynamic);
-	string getCPU(const string &argument, boolean *dynamic);
-	string getDate(const string &argument, boolean *dynamic);
-	string getDiskAvailable(const string &argument, boolean *dynamic);
-	string getDiskInUse(const string &argument, boolean *dynamic);
-	string getDiskTotal(const string &argument, boolean *dynamic);
-	string getHostName(const string &argument, boolean *dynamic);
-	string getIP(const string &argument, boolean *dynamic);
-	string getMemAvailable(const string &argument, boolean *dynamic);
-	string getMemInUse(const string &argument, boolean *dynamic);
-	string getMemTotal(const string &argument, boolean *dynamic);
-	string getOS(const string &argument, boolean *dynamic);
-	string getRandomLine(const string &argument, boolean *dynamic);
-	string getSwapAvailable(const string &argument, boolean *dynamic);
-	string getSwapInUse(const string &argument, boolean *dynamic);
-	string getSwapTotal(const string &argument, boolean *dynamic);
-	string getTime(const string &argument, boolean *dynamic);
-	string getUserName(const string &argument, boolean *dynamic);
+	string getActiveTask(boolean *dynamic);
+	string getComputerName(boolean *dynamic);
+	string getCPU(boolean *dynamic);
+	string getDate(const vector<string> &arguments, boolean *dynamic);
+	string getDiskAvailable(const string &drive, boolean *dynamic);
+	string getDiskInUse(const string &drive, boolean *dynamic);
+	string getDiskTotal(const string &drive, boolean *dynamic);
+	string getHostName(boolean *dynamic);
+	string getIP(boolean *dynamic);
+	string getMemAvailable(boolean *dynamic);
+	string getMemInUse(boolean *dynamic);
+	string getMemTotal(boolean *dynamic);
+	string getOS(boolean *dynamic);
+	string getRandomLine(const string &file, boolean *dynamic);
+	string getSwapAvailable(boolean *dynamic);
+	string getSwapInUse(boolean *dynamic);
+	string getSwapTotal(boolean *dynamic);
+	string getTime(const vector<string> &arguments, boolean *dynamic);
+	string getUptime(const vector<string> &arguments, boolean *dynamic);
+	string getUserName(boolean *dynamic);
+	string getWindowTitle(const string &windowClass, boolean *dynamic);
 
-	string formatByteSize(largeInt byteSize);
+	string hideIfEmpty(const string &s, Label *label, boolean *dynamic);
+
+	string capitalize(const string &s);
+	string lowerCase(const string &s);
+	string after(const string &s, const string &search);
+	string afterLast(const string &s, const string &search);
+	string before(const string &s, const string &search);
+	string beforeLast(const string &s, const string &search);
+	string between(const string &s, const string &left, const string &right);
+	string trim(const string &s);
+	string upperCase(const string &s);
+
 	void getDiskFreeSpace(const string &drive, largeInt &freeBytes, largeInt &totalBytes);
 
-	string capitalize(const string &aString);
-	string lowerCase(const string &aString);
-	string trim(const string &aString);
-	string upperCase(const string &aString);
+	string formatByteSize(largeInt byteSize);
+	string formatDateTime(const string &format, const SYSTEMTIME &st);
+
+	char *getLocaleInfo(LCTYPE type);
+
+private:
+
+	char *am;
+	char *pm;
+
+	char *shortWeekdays[7];
+	char *weekdays[7];
+	char *shortMonths[12];
+	char *months[12];
 };
 
 extern SystemInfo *systemInfo;

@@ -37,6 +37,7 @@ string GetRCLine(const string &prefix, const string &baseName, const string &def
 int GetRCNamedValue(const string &prefix, const string &baseName, const NameValuePair *nameValuePairs, int defaultVal);
 StringList GetRCNameList(const string &prefix, const string &baseName);
 string GetRCString(const string &prefix, const string &baseName, const string &defaultVal);
+vector<string> GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal);
 Texture *GetRCTexture(const string &prefix, const string &baseName);
 
 void PaintDesktopEx(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, int xSrc, int ySrc, BOOL updateCache);

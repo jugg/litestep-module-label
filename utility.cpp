@@ -209,7 +209,7 @@ StringList ParseNameList(const string &source)
 		string name;
 		i = source.find_first_not_of(" \t", i);
 
-		while(i < length && isalnum(source[i]))
+		while(i < length && (isalnum(source[i]) || source[i] == '_'))
 		{
 			name.append(1, source[i]);
 			i++;
@@ -316,6 +316,40 @@ string GetRCString(const string &prefix, const string &baseName, const string &d
 		return string(buffer);
 
 	return defaultVal;
+}
+
+StringVector GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal)
+{
+	string name = prefix + baseName;
+	StringVector result;
+	FILE *f;
+
+	if(f = LCOpen(0))
+	{
+		char lineBuffer[1024];
+
+		while(LCReadNextCommand(f, lineBuffer, 1024))
+		{
+			char *buffers[2];
+			char commandName[64];
+			char value[1024] = { 0 };
+
+			buffers[0] = commandName;
+			buffers[1] = value;
+
+			LCTokenize(lineBuffer, buffers, 2, 0);
+
+			if(stricmp(commandName, name.c_str()) == 0)
+			{
+				result.push_back(string(value));
+			}
+		}
+
+		LCClose(f);
+	}
+
+	if(result.empty() && !defaultVal.empty()) result.push_back(defaultVal);
+	return result;
 }
 
 // retrieve a texture from step.rc

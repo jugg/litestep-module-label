@@ -43,6 +43,16 @@ void Font::apply(HDC hDC, int x, int y, int width, int height, const string &tex
 	int bkMode = SetBkMode(hDC, TRANSPARENT);
 	int textColor = SetTextColor(hDC, color);
 
+	DrawTextEx(hDC, (char *) text.c_str(), text.length(), &r, flags | DT_CALCRECT, 0);
+
+	int neededHeight = r.bottom - r.top;
+	int vPad = (height - neededHeight) / 2;
+
+	r.left = x;
+	r.top = y + vPad;
+	r.right = x + width;
+	r.bottom = y + neededHeight + vPad;
+
 	if(shadow)
 	{
 		OffsetRect(&r, (shadowX + 1) / 2, (shadowY + 1) / 2);

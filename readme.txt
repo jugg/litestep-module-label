@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
-                                Label 1.4
+                                Label 1.5
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
-                        Last Modified: 03-20-2001
+                        Last Modified: 04-10-2001
 --------------------------------------------------------------------------
 
 Overview
@@ -291,6 +291,25 @@ and can only contain letters and numbers (no symbols or spaces). Separate
 names with commas and do not use quotes. If no value is provided then a
 single label named "Label" is created by default.
 
+As of version 1.5 it is also possible to create and destroy labels as
+Litestep is running. The !LabelCreate bang command takes the name of a
+label that is defined in step.rc, but which is not already loaded (it
+doesn't appear in any "Labels" lines). !LabelCreate then creates the label
+and initializes it with the configuration specified in the step.rc. This
+lets you delay creation of labels that will not be visible right away.
+Each label that is loaded with have an associated !LabelDestroy bang
+command that can be used to unload that label, freeing the resources it is
+using.
+
+!LabelCreate <label-name>
+Creates and initializes the named label. Note that this is a global bang
+command - to create a label named MyLabel use "!LabelCreate MyLabel", not
+"MyLabelCreate".
+
+!LabelDestroy
+Destroy a label and release any resources in use. This bang command is
+defined for each label - to destroy MyLabel use "!MyLabelDestroy".
+
 
 Text Escape Sequences
 ---------------------
@@ -305,6 +324,13 @@ ClockLabelText "The time is: [time]"
 QuoteLabelText "Quote of the Day: [trim(randomLine('C:\quotes.txt'))]"
 SysLabelText "CPU: [cpu], RAM: [memInUse]"
 
+As of version 1.5, labels can have text which spans multiple lines. To
+create a line break in the text use the character sequence "\n". If you
+need to include a literal backslash then use "\\".
+
+MultiLineLabelText "This is on line 1\nThis is on line 2"
+MemLabelText "Memory Info\n\nFree: [memAvailable]\nTotal: [memTotal]"
+
 The following is a list of all the valid data sources and any parameters
 they take:
 
@@ -317,8 +343,8 @@ Name assigned to this computer.
 cpu
 Current total CPU usage percent.
 
-date
-Current local date.
+date('format')
+Current local date. Format is optional and is explained below.
 
 diskAvailable('drive')
 Amount of space currently available on given drive.
@@ -359,19 +385,46 @@ Amount of swap space currently in use.
 swapTotal
 Total amount of swap space in the system.
 
-time
-Current local time.
+time('format')
+Current local time. Format is optional and is explained below.
+
+uptime('format')
+Current system uptime. Format is optional and is explained below.
 
 userName
 Name of the user currently logged on.
+
+windowTitle('class')
+Title of the window with the given class name.
 
 The following is the list of all valid modifier functions. These functions
 can be used to modify the output from any of the above data sources. For
 instance, the computer name is usually reported in all uppercase letters,
 so you could use lowerCase or capitalize to change that.
 
+after(x, delim)
+Extracts the part of x after the first occurance of delim.
+
+afterLast(x, delim)
+Extracts the part of x after the last occurance of delim.
+
+before(x, delim)
+Extracts the part of x before the first occurance of delim.
+
+beforeLast(x, delim)
+Extracts the part of x before the last occurance of delim.
+
+between(x, delim1, delim2)
+Extracts the part of x that lies between the first occurance of delim1 and
+the last occurance of delim2.
+
 capitalize(x)
 Makes all characters lowercase except for the first which is uppercased.
+
+hideIfEmpty(x)
+If x evaluates to an empty string and the label is visible then it is
+hidden. Otherwise if x evaluates to a non-empty string and the label
+is hidden then it will be shown. The argument is passed through unchanged.
 
 lowerCase(x)
 Makes all characters lowercase.
@@ -381,6 +434,30 @@ Removes leading and trailing whitespace.
 
 upperCase(x)
 Makes all characters uppercase.
+
+The [date], [time], and [uptime] data sources can optionally take a format
+as a parameter. The following character sequences will be interpreted in
+the format (anything else is included verbatim):
+
+m			month (1-12)
+mm			month with leading zero (01-12)
+mmm			abbreviated month name (Jan, Feb, etc)
+mmmm		full month name (January, February, etc)
+d			day (1-31)
+dd			day with leading zero (01-31)
+ddd			abbreviated weekday name (Sun, Mon, etc)
+dddd		full weekday name (Sunday, Monday, etc)
+yy			2-digit year
+yyyy		4-digit year
+h			hour (1-12)
+hh			hour with leading zero (01-12)
+n			minute (0-59)
+nn			minute with leading zero (00-59)
+s			second (0-59)
+ss			second with leading zero (00-59)
+am/pm		am/pm indicator
+
+For [uptime] only the day, hour, minute, and second values are valid.
 
 
 Disclaimer

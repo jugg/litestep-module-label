@@ -2,10 +2,14 @@
 #include "bangCommands.h"
 #include "Label.h"
 
+extern HINSTANCE hInstance;
+extern LabelList labelList;
+
 Label *lookupLabel(const string &name);
 
 // forwards declarations
 void AlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void DestroyBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void HideBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void MoveBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void PinToDesktopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
@@ -20,6 +24,7 @@ void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arg
 // bang commands implemented by this module
 struct { const char *name; BangCommandEx *function; } bangCommands[] = {
 	{ "!%sAlwaysOnTop", AlwaysOnTopBangCommand },
+	{ "!%sDestroy", DestroyBangCommand },
 	{ "!%sHide", HideBangCommand },
 	{ "!%sMove", MoveBangCommand },
 	{ "!%sPinToDesktop", PinToDesktopBangCommand },
@@ -58,6 +63,14 @@ void RemoveBangCommands(const string &labelName)
 	}
 }
 
+// create a label
+void CreateLabelBangCommand(HWND caller, const char *arguments)
+{
+	Label *label = new Label(arguments);
+	label->load(hInstance);
+	labelList.insert(labelList.end(), label);
+}
+
 // make a label always on top
 void AlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
 {
@@ -65,6 +78,19 @@ void AlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char
 	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 12));
 
 	if(label != 0) label->setAlwaysOnTop(true);
+}
+
+// make a label always on top
+void DestroyBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 8));
+
+	if(label != 0)
+	{
+		labelList.remove(label);
+		delete label;
+	}
 }
 
 // hide a label

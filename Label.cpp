@@ -150,7 +150,7 @@ void Label::setJustify(int justify)
 void Label::setText(const string &text)
 {
 	this->originalText = text;
-	this->text = systemInfo->processLabelText(text, &dynamicText);
+	this->text = systemInfo->processLabelText(text, this, &dynamicText);
 
 	if(hWnd != 0)
 	{
@@ -292,12 +292,12 @@ void Label::show()
 	}
 
 	visible = true;
-	ShowWindow(hWnd, SW_SHOW);
+	ShowWindow(hWnd, SW_SHOWNOACTIVATE);
 }
 
 void Label::update()
 {
-	text = systemInfo->processLabelText(originalText);
+	text = systemInfo->processLabelText(originalText, this);
 	repaint();
 }
 
@@ -471,7 +471,7 @@ void Label::onPaint(HDC hDC)
 		width - leftBorder - rightBorder,
 		height - topBorder - bottomBorder,
 		text,
-		justify | DT_SINGLELINE | DT_VCENTER);
+		justify /* | DT_SINGLELINE */ | DT_VCENTER);
 
 	// blt the double buffer to the display
 	BitBlt(hDC, 0, 0, width, height, bufferDC, 0, 0, SRCCOPY);
@@ -531,6 +531,12 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 {
 	switch(message)
 	{
+		case WM_CLOSE:
+		{
+			lResult = 0;
+			return true;
+		}
+
 		case WM_LBUTTONDBLCLK:
 		{
 			onLButtonDblClk((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));

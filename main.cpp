@@ -1,10 +1,9 @@
 #include "common.h"
+#include "bangCommands.h"
 #include "Label.h"
 #include "SystemInfo.h"
 
-typedef list<Label *> LabelList;
-typedef list<Label *>::iterator LabelListIterator;
-
+HINSTANCE hInstance;
 HWND messageHandler;
 LabelList labelList;
 
@@ -16,7 +15,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			strcpy((char *) lParam, "Label 1.4 (Maduin)");
+			strcpy((char *) lParam, "Label 1.5 (Maduin)");
 			return strlen((char *) lParam);
 		}
 
@@ -111,6 +110,7 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 		(WPARAM) messageHandler,
 		(LPARAM) lsMessages);
 
+	::hInstance = hInstance;
 	systemInfo = new SystemInfo();
 
 	StringList labelNames = GetRCNameList("Labels", "");
@@ -123,6 +123,8 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 		labelList.insert(labelList.end(), label);
 	}
 
+	AddBangCommand("!LabelCreate", CreateLabelBangCommand);
+
 	return 0;
 }
 
@@ -131,6 +133,8 @@ extern HBITMAP hbmDesktop;
 
 void quitModule(HINSTANCE hInstance)
 {
+	RemoveBangCommand("!LabelCreate");
+
 	for(LabelListIterator it = labelList.begin(); it != labelList.end(); it++)
 		delete *it;
 

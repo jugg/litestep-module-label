@@ -64,7 +64,7 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\label.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib lsapi.lib /nologo /dll /pdb:none /machine:I386 /def:".\exports.def" /out:"$(OUTDIR)\label.dll" /implib:"$(OUTDIR)\label.lib" 
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib wsock32.lib lsapi.lib /nologo /dll /pdb:none /machine:I386 /def:".\exports.def" /out:"$(OUTDIR)\label.dll" /implib:"$(OUTDIR)\label.lib" /opt:nowin98 
 DEF_FILE= \
 	".\exports.def"
 LINK32_OBJS= \
@@ -119,7 +119,7 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\label.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib lsapi.lib /nologo /dll /pdb:none /debug /machine:I386 /def:".\exports.def" /out:"$(OUTDIR)\label.dll" /implib:"$(OUTDIR)\label.lib" 
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib wsock32.lib lsapi.lib /nologo /dll /pdb:none /debug /machine:I386 /def:".\exports.def" /out:"$(OUTDIR)\label.dll" /implib:"$(OUTDIR)\label.lib" 
 DEF_FILE= \
 	".\exports.def"
 LINK32_OBJS= \
