@@ -1,3 +1,6 @@
+1.991 10-07-2004 (Nathan E. Moore nate@redtetrahedron.org)
+- added !LabelMoveDelta, !LabelResizeDelta, !LabelRepositionDelta
+
 1.99, 02-20-2003 (X)
 - added support for multiple texts
 - added !LabelPrevious and !LabelNext

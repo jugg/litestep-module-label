@@ -27,6 +27,9 @@ void ScrollBangCommand(HWND caller, const char *bangCommandName, const char *arg
 void RefreshBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void PreviousBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void NextBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void RepositionDeltaBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void ResizeDeltaBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void MoveDeltaBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 
 bangcmddef MinimalBangs[] = {
 	{ "!%sHide", HideBangCommand },
@@ -48,6 +51,9 @@ bangcmddef FullBangs[] = {
 	{ "!%sScroll", ScrollBangCommand },
 	{ "!%sPrevious", PreviousBangCommand },
 	{ "!%sNext", NextBangCommand },
+	{ "!%sResizeDelta", ResizeDeltaBangCommand },
+	{ "!%sMoveDelta", MoveDeltaBangCommand },
+	{ "!%sRepositionDelta", RepositionDeltaBangCommand },
 	{ NULL, NULL }
 };
 
@@ -480,6 +486,78 @@ void NextBangCommand(HWND caller, const char *bangCommandName, const char *argum
 	string labelName = string(bangCommandName);
 	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 5));
 	if(label != 0) label->next();
+}
+
+// move a label
+void MoveDeltaBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 10));
+
+	if(label != 0)
+	{
+		char xCoord[16];
+		char yCoord[16];
+
+		char *tokenBuffers[] = { xCoord, yCoord };
+
+		if(LCTokenize(arguments, tokenBuffers, 2, 0) == 2)
+		{
+			int x = atoi(xCoord);
+			int y = atoi(yCoord);
+			label->move(x + label->getX(), y + label->getY());
+		}
+	}
+}
+
+// reposition (move and resize) a label
+void RepositionDeltaBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 16));
+
+	if(label != 0)
+	{
+		char xCoord[16];
+		char yCoord[16];
+		char xSize[16];
+		char ySize[16];
+
+		char *tokenBuffers[] = { xCoord, yCoord, xSize, ySize };
+
+		if(LCTokenize(arguments, tokenBuffers, 4, 0) == 4)
+		{
+			int x = atoi(xCoord);
+			int y = atoi(yCoord);
+			int width = atoi(xSize);
+			int height = atoi(ySize);
+
+			label->reposition(x + label->getX(), y + label->getY(), width + label->getWidth(), height + label->getHeight());
+		}
+	}
+}
+
+// resize a label
+void ResizeDeltaBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 12));
+
+	if(label != 0)
+	{
+		char xSize[16];
+		char ySize[16];
+
+		char *tokenBuffers[] = { xSize, ySize };
+
+		if(LCTokenize(arguments, tokenBuffers, 2, 0) == 2)
+		{
+			int width = atoi(xSize);
+			int height = atoi(ySize);
+
+			label->resize(width + label->getWidth(), height + label->getHeight());
+		}
+	}
 }
 
 // value of digit char

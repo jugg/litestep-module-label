@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.99
+                                Label 1.991
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
                         ilmcuts <ilmcuts@gmx.net>
-                        Last Modified: 02-20-2003
+                        Last Modified: 10-07-2004
 --------------------------------------------------------------------------
 
 Overview
@@ -277,6 +277,16 @@ Switch to the previous text.
 
 !LabelNext
 Switch to the next text.
+
+!LabelMoveDelta <x-coordinate delta> <y-coordinate delta>
+Moves the Label by the given values. The two arguments are interpreted as integers negative
+values move the label up or left.
+
+!LabelResizeDelta <width delta> <height delta>
+Resizes the label by the given values. Negative values make the label smaller
+
+!LableRepositionDelta <x-coordinate delta> <y-coordinate delta> <width delta> <height delta>
+moves and resizes by the given values. 
 
 
 Events
