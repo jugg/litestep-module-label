@@ -1,3 +1,8 @@
+1.97, 10-03-2002 (ilmcuts, wols)
+- fixed Indie LS dependency
+- fixed !labelclipboard inserting random characters if used without parameters
+- added support for MBM 5.1.9.1
+
 1.96, 08-13-2002 (ilmcuts, MickeM, Vendicator)
 - fixed all known resource leaks
 - fixed !bang commands not being properly removed

@@ -5,6 +5,7 @@
 #include "Label.h"
 #include "SystemInfo.h"
 #include "Texture.h"
+#include <shellapi.h>
 
 #define TIMER_MOUSETRACK 1
 #define TIMER_UPDATE 2
@@ -47,7 +48,7 @@ Label::~Label()
 
 	RemoveBangCommands(name, bangCommands);
 
-	if(hWnd)
+	if(IsWindow(hWnd))
 	{
 		// just in case...
 		KillTimer(hWnd, TIMER_MOUSETRACK);
@@ -79,9 +80,17 @@ Label::~Label()
 void Label::load(HINSTANCE hInstance, HWND box)
 {
 	this->hInstance = hInstance;
-	this->box = box;
 	
-	if (hWnd && IsWindow(hWnd))	// window already exists...
+    if (IsWindow(box))
+    {
+        this->box = box;
+    }
+    else
+    {
+        this->box = NULL;
+    }
+	
+	if (IsWindow(hWnd))	// window already exists...
 		return;
 
 	hWnd = CreateWindowEx(box ? 0 : WS_EX_TOOLWINDOW,

@@ -130,9 +130,12 @@ void RemoveBangCommands(const string &labelName, int &bangs)
 // create a label
 void CreateLabelBangCommand(HWND caller, const char *arguments)
 {
-	Label *label = new Label(arguments);
-	label->load(hInstance);
-	labelList.insert(labelList.end(), label);
+	if (arguments && arguments[0])
+    {
+        Label *label = new Label(arguments);
+        label->load(hInstance);
+        labelList.insert(labelList.end(), label);
+    }
 }
 
 //LsBox BangHook support by blkhawk
@@ -406,14 +409,12 @@ void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *
 			HGLOBAL hClipBuffer;
 			char* pszBuffer;
 			EmptyClipboard();
-			if(arguments[0])
+			if(arguments && arguments[0])
 			{
 				DWORD dwBytes = sText.length()+strlen(arguments)+2;
 				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, dwBytes);
 				pszBuffer = (char*)GlobalLock(hClipBuffer);
-				StringCbCopy(pszBuffer, dwBytes, arguments);
-				StringCbCat(pszBuffer, dwBytes, " ");
-				StringCbCat(pszBuffer, dwBytes, sText.c_str());
+				StringCbPrintf(pszBuffer, dwBytes, "%s %s", arguments, sText.c_str());
 			}
 			else
 			{
@@ -439,13 +440,13 @@ void ScrollBangCommand(HWND caller, const char *bangCommandName, const char *arg
 	if(!label)
 		return;
 	
-	if (stricmp(arguments, "on") == 0)
+	if (_stricmp(arguments, "on") == 0)
 		label->setScrolling(true);
 
-	else if (stricmp(arguments, "off") == 0)
+	else if (_stricmp(arguments, "off") == 0)
 		label->setScrolling(false);
 
-	else if (stricmp(arguments, "toggle") == 0)
+	else if (_stricmp(arguments, "toggle") == 0)
 		label->isScrolling() ? label->setScrolling(false) : label->setScrolling(true);
 
 	else

@@ -4,25 +4,79 @@
 #include "SystemInfo.h"
 #include "Label.h"
 
-const int numMBMTemperatures = 10;
-const int numMBMVoltages = 10;
-const int numMBMFans = 10;
-const int numMBMCPUs = 4;
-
 const int unitsDefault = 0;
 const int unitsKB = 1;
 const int unitsMB = 2;
 const int unitsGB = 3;
 const int unitsPercent = 4;
 
-struct MBMSharedData {
-	int temperature[numMBMTemperatures];
-	double voltage[numMBMVoltages];
-	int fan[numMBMFans];
-	int MHz;
-	unsigned char numCPUs;
-	double CPU[numMBMCPUs];
-};
+//    enum Bus
+#define BusType     char
+#define ISA         0
+#define SMBus       1
+#define VIA686Bus   2
+#define DirectIO    3
+
+//    enum SMB
+#define SMBType         char
+#define smtSMBIntel     0
+#define smtSMBAMD       1
+#define smtSMBALi       2
+#define smtSMBNForce    3
+#define smtSMBSIS       4
+
+
+// enum Sensor Types
+#define SensorType      char
+#define stUnknown       0
+#define stTemperature   1
+#define stVoltage       2
+#define stFan           3
+#define stMhz           4
+#define stPercentage    5  
+
+
+typedef struct {
+    SensorType  iType;          // type of sensor
+    int         Count;          // number of sensor for that type
+} SharedIndex;
+
+typedef struct {
+    SensorType ssType;          // type of sensor
+    unsigned char ssName[12];   // name of sensor
+    char sspadding1[3];         // padding of 3 byte
+    double ssCurrent;           // current value
+    double ssLow;               // lowest readout
+    double ssHigh;              // highest readout
+    long ssCount;               // total number of readout
+    char sspadding2[4];         // padding of 4 byte
+    long double ssTotal;        // total amout of all readouts
+    char sspadding3[6];         // padding of 6 byte
+    double ssAlarm1;            // temp & fan: high alarm; voltage: % off;
+    double ssAlarm2;            // temp: low alarm
+} SharedSensor;
+
+typedef struct {
+    short siSMB_Base;            // SMBus base address
+    BusType siSMB_Type;         // SMBus/Isa bus used to access chip
+    SMBType siSMB_Code;         // SMBus sub type, Intel, AMD or ALi
+    char siSMB_Addr;            // Address of sensor chip on SMBus
+    unsigned char siSMB_Name[41];        // Nice name for SMBus
+    short siISA_Base;            // ISA base address of sensor chip on ISA
+    int siChipType;             // Chip nr, connects with Chipinfo.ini
+    char siVoltageSubType;      // Subvoltage option selected
+} SharedInfo;
+
+typedef struct {
+    double sdVersion;           // version number (example: 51090)
+    SharedIndex sdIndex[10];     // Sensor index
+    SharedSensor sdSensor[100];  // sensor info
+    SharedInfo sdInfo;          // misc. info
+    unsigned char sdStart[41];           // start time                              
+    unsigned char sdCurrent[41];         // current time
+    unsigned char sdPath[256];           // MBM path
+} mbmSharedData;
+
 
 SystemInfo::SystemInfo()
 {
@@ -212,14 +266,14 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return getInternetTime(dynamic);
 	else if(name == "lsvar" && arguments.size() >= 1)
 		return getLSVar(arguments[0], dynamic);
-	else if(name == "mbmcpuusage")
-		return getMBMCPUUsage(arguments, dynamic);
-	else if(name == "mbmfanspeed")
-		return getMBMFanSpeed(arguments, dynamic);
 	else if(name == "mbmtemperature")
-		return getMBMTemperature(arguments, dynamic, label->bUseFahrenheit);
+		return getMBMData(stTemperature, arguments, dynamic, label->bUseFahrenheit);
+	else if(name == "mbmcpuusage")
+		return getMBMData(stPercentage, arguments, dynamic, label->bUseFahrenheit);
+	else if(name == "mbmfanspeed")
+		return getMBMData(stFan, arguments, dynamic, label->bUseFahrenheit);
 	else if(name == "mbmvoltage")
-		return getMBMVoltage(arguments, dynamic);
+		return getMBMData(stVoltage, arguments, dynamic, label->bUseFahrenheit);
 	else if(name == "memavailable")
 		return getMemAvailable(arguments, dynamic);
 	else if(name == "meminuse")
@@ -888,154 +942,87 @@ string SystemInfo::getBattery(boolean *dynamic)
 // -----------------------------------
 //  MotherBoard Monitor 5 (MBM5) info
 // -----------------------------------
-
-string SystemInfo::getMBMCPUUsage(const vector<string> &arguments, boolean *dynamic)
+/*
+sensortype:		the type of sensor it should return (temp, voltage, fan, etc)
+arguments:		# of sensor (you can have more than one temp sensor)
+dynamic:		if this is a dynamic variable which can change over time
+bUseFahrenheit:	if we should return the values in Fahrenheit
+*/
+string SystemInfo::getMBMData (const SensorType sensortype, const vector<string> &arguments, boolean *dynamic, boolean &bUseFahrenheit)
 {
-	if(dynamic) *dynamic = 1;
+	if(dynamic) *dynamic = 1;	//this is always a dynamic variable
 
 	int n = 0;
-	int value = 0;
+	double value = 0;
+	mbmSharedData *pSharedData = NULL;
+	char output[16];
 
 	if(arguments.size() >= 1)
 		n = atoi(arguments[0].c_str()) - 1;
 
-	if(n < 0) n = 0;
-	if(n >= numMBMCPUs) n = numMBMCPUs - 1;
+	if(n < 0) n = 0;		//n has now the # of the sensor we´re looking for
 
-	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
-		FALSE,
-		"$M$B$M$5$D$");
-
+	HANDLE hSharedData=OpenFileMapping(FILE_MAP_READ, FALSE, "$M$B$M$5$S$D$");
+	if (hSharedData==0)
+		return "0";
+	
 	if(hSharedData != INVALID_HANDLE_VALUE)
-	{
-		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
+	{	pSharedData = (mbmSharedData *) MapViewOfFile(hSharedData,
 			FILE_MAP_READ, 0, 0, 0);
-
-		if(pSharedData)
-		{
-			value = pSharedData->CPU[n];
+	if(!pSharedData) {
+			CloseHandle (hSharedData);
 			UnmapViewOfFile(pSharedData);
+			return "0";
 		}
-
-		CloseHandle(hSharedData);
 	}
 
-	char output[16];
-	StringCchPrintf(output, 16, "%d", value);
-	return string(output);
-}
+	//this only works with newer versions of MBM
+	if (pSharedData->sdVersion < 51090) {
+		return "Please update your version of MBM";
+	}
 
-string SystemInfo::getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic)
-{
-	if(dynamic) *dynamic = 1;
+	int totalSensorCount = 0;
+	for (int i=0;i<5;i++)
+		totalSensorCount +=	pSharedData->sdIndex[i].Count;
 
-	int n = 0;
-	int value = 0;
 
-	if(arguments.size() >= 1)
-		n = atoi(arguments[0].c_str()) - 1;
-
-	if(n < 0) n = 0;
-	if(n >= numMBMFans) n = numMBMFans - 1;
-
-	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
-		FALSE,
-		"$M$B$M$5$D$");
-
-	if(hSharedData != INVALID_HANDLE_VALUE)
-	{
-		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
-			FILE_MAP_READ, 0, 0, 0);
-
-		if(pSharedData)
+	for (int j=0;j<totalSensorCount;j++)
+	{	
+		if (pSharedData->sdSensor[j].ssType == sensortype)	//is this the type of sensor we´re looking for?
 		{
-			value = pSharedData->fan[n];
-			UnmapViewOfFile(pSharedData);
+			if (n == 0)		//have we found our sensor?
+			{
+				switch (sensortype) 
+				{
+					case stTemperature:
+
+						value = pSharedData->sdSensor[j].ssCurrent;
+						if (bUseFahrenheit) {
+							value = value * 9 / 5 + 32;
+						} 
+
+						StringCbPrintf (output, 15, "%.0f", value);
+						break;
+					case stVoltage:
+					case stFan:
+						value = pSharedData->sdSensor[j].ssCurrent;
+						StringCbPrintf (output, 15, "%.2f", value);
+						break;
+				}
+				UnmapViewOfFile(pSharedData);
+				CloseHandle (hSharedData);
+				return string(output);
+			}
+			else		//no we haven´t found it yet: same type, but wrong number
+			{
+				n--;
+			}
 		}
-
-		CloseHandle(hSharedData);
 	}
 
-	char output[16];
-	StringCchPrintf(output, 16, "%d", value);
-	return string(output);
-}
-
-string SystemInfo::getMBMTemperature(const vector<string> &arguments, boolean *dynamic, boolean &bUseFahrenheit)
-{
-	if(dynamic) *dynamic = 1;
-
-	int n = 0;
-	float value = 0;
-
-	if(arguments.size() >= 1)
-		n = atoi(arguments[0].c_str()) - 1;
-
-	if(n < 0) n = 0;
-	if(n >= numMBMTemperatures) n = numMBMTemperatures - 1;
-
-	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
-		FALSE,
-		"$M$B$M$5$D$");
-
-	if(hSharedData != INVALID_HANDLE_VALUE)
-	{
-		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
-			FILE_MAP_READ, 0, 0, 0);
-
-		if(pSharedData)
-		{
-			value = pSharedData->temperature[n];
-			UnmapViewOfFile(pSharedData);
-		}
-
-		CloseHandle(hSharedData);
-	}
-
-	if (bUseFahrenheit) {
-		value = value * 9 / 5 + 32;
-	}
-
-	char output[16];
-	StringCchPrintf(output, 16, "%.0f", value);
-
-	return string(output);
-}
-
-string SystemInfo::getMBMVoltage(const vector<string> &arguments, boolean *dynamic)
-{
-	if(dynamic) *dynamic = 1;
-
-	int n = 0;
-	double value = 0.0;
-
-	if(arguments.size() >= 1)
-		n = atoi(arguments[0].c_str()) - 1;
-
-	if(n < 0) n = 0;
-	if(n >= numMBMVoltages) n = numMBMVoltages - 1;
-
-	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
-		FALSE,
-		"$M$B$M$5$D$");
-
-	if(hSharedData != INVALID_HANDLE_VALUE)
-	{
-		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
-			FILE_MAP_READ, 0, 0, 0);
-
-		if(pSharedData)
-		{
-			value = pSharedData->voltage[n];
-			UnmapViewOfFile(pSharedData);
-		}
-
-		CloseHandle(hSharedData);
-	}
-
-	char output[16];
-	StringCchPrintf(output, 16, "%.2f", value);
-	return string(output);
+	UnmapViewOfFile(pSharedData);
+	CloseHandle (hSharedData);
+	return "0";
 }
 
 string SystemInfo::hideIfEmpty(const string &s, Label *label, boolean *dynamic)

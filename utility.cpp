@@ -160,7 +160,7 @@ int GetRCColor(const string &object, const string &subKey, int defaultVal)
 */
 
 // parse a coordinate specification
-int ParseCoordinate(const string &aString, int defaultVal, int maxVal)
+int LblParseCoordinate(const string &aString, int defaultVal, int maxVal)
 {
 	string strVal = trim(aString);
 
@@ -169,7 +169,7 @@ int ParseCoordinate(const string &aString, int defaultVal, int maxVal)
 
 	boolean negative = false;
 	boolean center = false;
-	int i = 0;
+	UINT i = 0;
 	int value = 0;
 
 	if(strVal[i] == '-')
@@ -215,10 +215,10 @@ int ParseCoordinate(const string &aString, int defaultVal, int maxVal)
 }
 
 // retrieve a coordinate from step.rc, accounting for negative values and centering
-int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal)
+int LblGetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal)
 {
 	string strVal = GetRCString(prefix, baseName, "");
-	return ParseCoordinate(strVal, defaultVal, maxVal);
+	return LblParseCoordinate(strVal, defaultVal, maxVal);
 }
 
 // parse a dimension
@@ -231,7 +231,7 @@ int ParseDimension(const string &aString, int defaultVal, int maxVal)
 
 	boolean negative = false;
 	boolean percentage = false;
-	int i = 0;
+	UINT i = 0;
 	int value = 0;
 
 	if(strVal[i] == '-')
@@ -350,7 +350,7 @@ StringList GetRCNameList(const string &prefix)
 			char value[MAX_LINE_LENGTH];
 			LCTokenize(lineBuffer, buffers, 1, value);
 
-			if(value[0] && stricmp(prefix.c_str(), commandName) == 0)
+			if(value[0] && _stricmp(prefix.c_str(), commandName) == 0)
 			{
 				StringList sl = ParseNameList(value);
 				resultList.insert(resultList.end(), sl.begin(), sl.end());
@@ -373,7 +373,7 @@ int GetRCNamedValue(const string &prefix, const string &baseName, const NameValu
 	{
 		while(current->name)
 		{
-			if(stricmp(current->name, name.c_str()) == 0)
+			if(_stricmp(current->name, name.c_str()) == 0)
 				return current->value;
 
 			current++;
@@ -471,7 +471,7 @@ string GetRCString(const string &object, const string &subKey, const string &def
 
 			LCTokenize(lineBuffer, buffers, 2, 0);
 
-			if(stricmp(commandName, name.c_str()) == 0)
+			if(_stricmp(commandName, name.c_str()) == 0)
 			{
 				result.push_back(string(value));
 			}

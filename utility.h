@@ -38,8 +38,8 @@ void ModifyStyle(HWND hWnd, DWORD removeStyle, DWORD addStyle);
 
 boolean GetRCBoolean(const string &prefix, const string &baseName, boolean defaultVal = false);
 int GetRCColor(const string &prefix, const string &baseName, int defaultVal);
-int ParseCoordinate(const string &aString, int defaultVal, int maxVal);
-int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal);
+int LblParseCoordinate(const string &aString, int defaultVal, int maxVal);
+int LblGetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal);
 int ParseDimension(const string &aString, int defaultVal, int maxVal);
 int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal);
 Font *GetRCFont(const string &prefix, Font *defaultVal = 0);

@@ -54,11 +54,8 @@ private:
 	string getWinampStatus(boolean *dynamic);
 
 	// MotherBoard Monitor 5 (MBM5) info
-	string getMBMCPUUsage(const vector<string> &arguments, boolean *dynamic);
-	string getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic);
-	string getMBMTemperature(const vector<string> &arguments, boolean *dynamic, boolean &bUseFahrenheit);
-	string getMBMVoltage(const vector<string> &arguments, boolean *dynamic);
-
+	string getMBMData(const char, const vector<string> &arguments, boolean *dynamic, boolean &bUseFahrenheit);;
+	
 	// miscellaneous info
 	string getActiveTask(boolean *dynamic);
 	string getCPU(boolean *dynamic);

@@ -25,7 +25,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 		case LM_GETREVID:
 		{
 			UINT uLength;
-			StringCchPrintf((char*)lParam, 64, "%s %s (%s)", V_NAME, V_VERSION, V_AUTHOR);
+			StringCchPrintf((char*)lParam, 64, "%s %s", V_NAME, V_VERSION);
 			
 			if (SUCCEEDED(StringCchLength((char*)lParam, 64, &uLength)))
 				return uLength;
@@ -49,7 +49,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 					// destroy all labels that no longer exist and that are not in a box
 					for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
 					{
-						if(stricmp((*it).c_str(), (*iter)->getName().c_str()) == 0)
+						if(_stricmp((*it).c_str(), (*iter)->getName().c_str()) == 0)
 							break;
 					}
 					if (it == labelNames.end())
@@ -219,7 +219,7 @@ Label *lookupLabel(const string &name)
 {
 	for(LabelListIterator it = labelList.begin(); it != labelList.end(); it++)
 	{
-		if(stricmp(name.c_str(), (*it)->getName().c_str()) == 0)
+		if(_stricmp(name.c_str(), (*it)->getName().c_str()) == 0)
 			return *it;
 	}
 
