@@ -22,6 +22,7 @@ void ShowBangCommand(HWND caller, const char *bangCommandName, const char *argum
 void ToggleAlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ToggleBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 
 // bang commands implemented by this module
 struct { const char *name; BangCommandEx *function; } bangCommands[] = {
@@ -37,7 +38,8 @@ struct { const char *name; BangCommandEx *function; } bangCommands[] = {
 	{ "!%sShow", ShowBangCommand },
 	{ "!%sToggleAlwaysOnTop", ToggleAlwaysOnTopBangCommand },
 	{ "!%sToggle", ToggleBangCommand },
-	{ "!%sUpdate", UpdateBangCommand }
+	{ "!%sUpdate", UpdateBangCommand },
+	{ "!%sClipboard", ClipboardBangCommand }
 };
 
 const int bangCommandCount = sizeof(bangCommands) / sizeof(bangCommands[0]);
@@ -301,6 +303,42 @@ void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arg
 	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 7));
 
 	if(label != 0) label->update();
+}
+
+// copies the label's contents to the clipboard
+void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 10));
+
+	if(label != 0)
+	{
+		string sText = label->getText();
+		if(OpenClipboard(NULL))
+		{
+			HGLOBAL hClipBuffer;
+			char* pszBuffer;
+			EmptyClipboard();
+			if(arguments)
+			{
+				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, sText.length()+strlen(arguments)+2);
+				pszBuffer = (char*)GlobalLock(hClipBuffer);
+				strcpy(pszBuffer, arguments);
+				strcat(pszBuffer, " ");
+				strcat(pszBuffer, sText.c_str());
+			}
+			else
+			{
+				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, sText.length()+1);
+				pszBuffer = (char*)GlobalLock(hClipBuffer);
+				memset(pszBuffer, 0, 1);
+				strcpy(pszBuffer, sText.c_str());
+			}
+			GlobalUnlock(hClipBuffer);
+			SetClipboardData(CF_TEXT, hClipBuffer);
+			CloseClipboard();
+		}
+	}
 }
 
 // value of digit char

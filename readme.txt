@@ -1,7 +1,8 @@
 --------------------------------------------------------------------------
-                                Label 1.9
+                                Label 1.91
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
-                        Last Modified: 11-06-2001
+               Erik Christiansson (Sci) <erik@alfafish.com>
+                        Last Modified: 01-16-2002
 --------------------------------------------------------------------------
 
 Overview
@@ -218,6 +219,10 @@ states.
 
 !LabelUpdate
 Forces the label to update its contents.
+
+!LabelClipboard [<text>]
+Copies the contents of the label to the clipboard. If the parameter is
+present, it will be printed in front of the label contents.
 
 
 Events

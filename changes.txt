@@ -1,3 +1,6 @@
+1.91, 01-16-2002 (Sci)
+- added !LabelClipboard
+
 1.9, 11-06-2001
 - updated MBM info and now requires MBM 5.1
 - added support for multiple IPs (little different from Blkhawk's)
