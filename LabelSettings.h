@@ -39,7 +39,7 @@ public:
 	int scrollPadLength;
 	boolean scroll;
 
-	boolean trueTransparency;
+//	boolean trueTransparency;
 
 	string text;
 
@@ -49,10 +49,13 @@ public:
 	string middleDoubleClickCommand;
 	string rightClickCommand;
 	string rightDoubleClickCommand;
+	string wheelDownCommand;
+	string wheelUpCommand;
 	string enterCommand;
 	string leaveCommand;
+	string dropCommand;
 };
 
-extern LabelSettings defaultSettings;
+extern LabelSettings* defaultSettings;
 
 #endif

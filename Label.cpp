@@ -13,6 +13,7 @@
 extern LabelList labelList;
 
 Label::Label(const string &name)
+:height(0),width(0),x(0),y(0)
 {
 	this->name = name;
 
@@ -24,7 +25,13 @@ Label::Label(const string &name)
 	box = 0;
 
 	visible = false;
+	bUsingDefSkin = false;
+	bInDestructor = false;
 
+	scroll = false;
+	scrollLimit = 0;
+	scrollPosition = 0;
+	
 	backgroundDC = 0;
 	bufferDC = 0;
 	backgroundBitmap = 0;
@@ -32,59 +39,91 @@ Label::Label(const string &name)
 
 	background = 0;
 	font = 0;
-
 }
 
 Label::~Label()
 {
+	bInDestructor = true;
+
 	RemoveBangCommands(name, bangCommands);
 
-	if(hWnd != 0)
+	if(hWnd)
 	{
+		// just in case...
+		KillTimer(hWnd, TIMER_MOUSETRACK);
+		KillTimer(hWnd, TIMER_UPDATE);
 		KillTimer(hWnd, TIMER_SCROLL);
 		DestroyWindow(hWnd);
 	}
 
-	if(backgroundBitmap != 0)
+	if(backgroundBitmap)
 	{
 		backgroundBitmap = (HBITMAP) SelectObject(backgroundDC, backgroundBitmap);
-		DeleteDC(backgroundDC);
 		DeleteObject(backgroundBitmap);
 	}
+	if (backgroundDC)
+		DeleteDC(backgroundDC);
 
-	if(bufferBitmap != 0)
+	if(bufferBitmap)
 	{
 		bufferBitmap = (HBITMAP) SelectObject(bufferDC, bufferBitmap);
-		DeleteDC(bufferDC);
 		DeleteObject(bufferBitmap);
 	}
+	if (bufferDC)
+		DeleteDC(bufferDC);
 
-	if(background != defaultSettings.skin) delete background;
-	if(font != defaultSettings.font) delete font;
+	if(!bUsingDefSkin) delete background;
+	if(font != defaultSettings->font) delete font;
 }
 
 void Label::load(HINSTANCE hInstance, HWND box)
 {
 	this->hInstance = hInstance;
 	this->box = box;
-
-	reconfigure();
 	
-	AddBangCommands(name, bangCommands);
+	if (hWnd && IsWindow(hWnd))	// window already exists...
+		return;
+
+	hWnd = CreateWindowEx(box ? 0 : WS_EX_TOOLWINDOW,
+		"LabelLS",
+		name.c_str(),
+		box ? WS_CHILD : WS_POPUP,
+		x, y,			// FIXME they're all 0, the window will be repositioned
+		width, height,	// FIXME see above
+		box ? box : GetLitestepWnd(), // GetLitestepDesktop(), FIXME: this way there aren't as many z-order problems =)
+		0,
+		hInstance,
+		this);
+		
+	if (hWnd)
+	{
+		SetWindowLong(hWnd, GWL_USERDATA, magicDWord);
+		
+		reconfigure();
+
+		repaint();
+		
+		AddBangCommands(name, bangCommands);
+	}
+	else
+		delete this;
 }
 
 void Label::reconfigure()
 {
 	LabelSettings settings(name.c_str());
 
-	setAlwaysOnTop(settings.alwaysOnTop);
-	reposition(settings.x, settings.y, settings.width, settings.height);
+	setAlwaysOnTop(settings.alwaysOnTop);	
+	reposition(settings.x, settings.y, settings.width, settings.height);	// FIXME? doesn't check old == new
 
 	bUseFahrenheit = settings.bUseFahrenheit;
 	bangCommands = settings.bangCommands;
+	
+	if(!box && (bangCommands == 5))
+		bangCommands = 6;				// hack for lsbox
 
-	setBackground(settings.skin);
-	setFont(settings.font);
+	setBackground(settings.skin);		// FIXME: this does not check if old == new on !refresh
+	setFont(settings.font);				// FIXME: see above
 	setJustify(settings.justify);
 	setText(settings.text);
 
@@ -101,20 +140,29 @@ void Label::reconfigure()
 	middleDoubleClickCommand = settings.middleDoubleClickCommand;
 	rightClickCommand = settings.rightClickCommand;
 	rightDoubleClickCommand = settings.rightDoubleClickCommand;
+	wheelDownCommand = settings.wheelDownCommand;
+	wheelUpCommand = settings.wheelUpCommand;
 	enterCommand = settings.enterCommand;
 	leaveCommand = settings.leaveCommand;
+	dropCommand = settings.dropCommand;
 
 	scrollPadLength = settings.scrollPadLength;
 	scrollInterval = settings.scrollInterval;
 	scrollSpeed = settings.scrollSpeed;
-	scroll = settings.scroll;
+	setScrolling(settings.scroll);
 
-	trueTransparency = settings.trueTransparency;
+	shadowY = font->shadowY;
 
-	if(!settings.startHidden)
-		show();
+//	trueTransparency = settings.trueTransparency;
 
-	if(background->isTransparent() && trueTransparency)
+	if (hWnd)
+	{
+		DragAcceptFiles(hWnd, !dropCommand.empty());
+		settings.startHidden ? hide() : show();
+	}
+
+	// FIXME
+/*	if(background->isTransparent() && trueTransparency)
 	{
 		//set the window region that pink areas aren't part of it
 		HDC tmpDC=CreateCompatibleDC(NULL);
@@ -122,23 +170,37 @@ void Label::reconfigure()
 		HGDIOBJ tmpObj = SelectObject(tmpDC, tmpBmp);
 		background->apply(tmpDC, 0, 0, width, height);
 		SelectObject(tmpDC, tmpObj);
-		SetWindowRgn(hWnd, BitmapToRegion(tmpBmp, RGB(255, 0, 255), 0, 0, 0), false);
+
+		// region handling a la MickeM =)
+		HRGN region;
+		region = BitmapToRegion(tmpBmp, RGB(255, 0, 255), 0, 0, 0);
+		HRGN windowRgn = CreateRectRgn(0, 0, 0, 0);
+		CombineRgn(windowRgn, region, NULL, RGN_COPY);
+
+		if (!SetWindowRgn(hWnd, windowRgn, TRUE)) {
+			::DeleteObject(windowRgn);
+		}
+
+		//SetWindowRgn(hWnd, BitmapToRegion(tmpBmp, RGB(255, 0, 255), 0, 0, 0), false);
 		DeleteObject(tmpBmp);
 		DeleteObject(tmpObj);
 		DeleteDC(tmpDC);
-	}
+	}*/
 }
 
 void Label::setAlwaysOnTop(boolean alwaysOnTop)
 {
 	this->alwaysOnTop = alwaysOnTop;
-
-	if(hWnd != 0 && box == 0)
+	
+	if (box)
+		return;
+	
+	if(hWnd)
 	{
 		ModifyStyle(hWnd, WS_POPUP, WS_CHILD);
 		SetParent(hWnd, alwaysOnTop ? 0 : GetLitestepDesktop());
 		ModifyStyle(hWnd, WS_CHILD, WS_POPUP);
-
+		
 		SetWindowPos(hWnd, alwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
 			0, 0, 0, 0,
 			SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
@@ -147,27 +209,63 @@ void Label::setAlwaysOnTop(boolean alwaysOnTop)
 
 void Label::setBox(HWND newparent)
 {
+	if (this->box == newparent)
+		return;
+
 	if (this->alwaysOnTop) this->setAlwaysOnTop(FALSE);
 	
 	this->box = newparent;
-
-	SetWindowLong(hWnd, GWL_STYLE, (GetWindowLong(hWnd, GWL_STYLE) &~ WS_POPUP)|WS_CHILD);
+	
+	ModifyStyle(hWnd, WS_POPUP, WS_CHILD);
 	SetParent(hWnd, newparent);
-//	SetWindowLong(hWnd, GWL_STYLE, (GetWindowLong(hWnd, GWL_STYLE) &~ WS_CHILD)|WS_POPUP);
+//	ModifyStyle(hWnd, WS_CHILD, WS_POPUP);
+}
+
+void Label::setScrolling(boolean scrolling)
+{
+	if (scrolling && !this->scroll)
+	{
+		scrollPosition = 0;
+		SetTimer(hWnd, TIMER_SCROLL, scrollInterval, 0);
+	}
+	else if (!scrolling && this->scroll)
+	{
+		KillTimer(hWnd, TIMER_SCROLL);
+		scrollPosition=0;
+		repaint();
+	}
+
+	scrollLimit = 0;
+	this->scroll = scrolling;
+}
+
+void Label::setScrollLimit(int limit)
+{
+	if (limit >= 0)
+	{
+		setScrolling(true);
+		scrollLimit = limit + 1;
+	}
+	else
+		setScrolling(false);
+
 }
 
 void Label::setBackground(Texture *background)
 {
-	if(this->background != defaultSettings.skin)
+	if(!bUsingDefSkin)
 		delete this->background;
 
 	this->background = background;
+
+	bUsingDefSkin = (background == defaultSettings->skin);
+	
 	repaint(true);
 }
 
 void Label::setFont(Font *font)
 {
-	if(this->font != defaultSettings.font)
+	if(this->font != defaultSettings->font)
 		delete this->font;
 
 	this->font = font;
@@ -177,21 +275,27 @@ void Label::setFont(Font *font)
 void Label::setUpdateInterval(int updateInterval)
 {
 	this->updateInterval = updateInterval;
-	if(hWnd != 0 && dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
+	if(hWnd && dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
 }
 
 void Label::setJustify(int justify)
 {
+	if (this->justify == justify)
+		return;
+
 	this->justify = justify;
 	repaint();
 }
 
 void Label::setText(const string &text)
 {
+	if ((this->text).compare(text) == 0)
+		return;
+
 	this->originalText = text;
 	this->text = systemInfo->processLabelText(text, this, &dynamicText);
 
-	if(hWnd != 0)
+	if(hWnd)
 	{
 		if(dynamicText)
 			SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
@@ -204,35 +308,47 @@ void Label::setText(const string &text)
 
 void Label::setLeftBorder(int leftBorder)
 {
+	if (this->leftBorder == leftBorder)
+		return;
+
 	this->leftBorder = leftBorder;
 	repaint();
 }
 
 void Label::setTopBorder(int topBorder)
 {
+	if (this->topBorder == topBorder)
+		return;
+
 	this->topBorder = topBorder;
 	repaint();
 }
 
 void Label::setRightBorder(int rightBorder)
 {
+	if (this->rightBorder == rightBorder)
+		return;
+
 	this->rightBorder = rightBorder;
 	repaint();
 }
 
 void Label::setBottomBorder(int bottomBorder)
 {
+	if (this->bottomBorder == bottomBorder)
+		return;
+
 	this->bottomBorder = bottomBorder;
 	repaint();
 }
 
 void Label::repaint(boolean invalidateCache)
 {
-	if(hWnd != 0)
+	if(hWnd)
 	{
 		if(invalidateCache)
 		{
-			if(backgroundDC != 0 && backgroundBitmap != 0)
+			if(backgroundDC && backgroundBitmap)
 			{
 				backgroundBitmap = (HBITMAP) SelectObject(backgroundDC, backgroundBitmap);
 				DeleteObject(backgroundBitmap);
@@ -249,7 +365,7 @@ void Label::move(int x, int y)
 	this->x = x;
 	this->y = y;
 
-	if(hWnd != 0)
+	if(hWnd)
 	{
 		SetWindowPos(hWnd, 0, x, y, 0, 0,
 			SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
@@ -263,7 +379,7 @@ void Label::reposition(int x, int y, int width, int height)
 	this->height = height;
 	this->width = width;
 
-	if(hWnd != 0)
+	if(hWnd)
 	{
 		SetWindowPos(hWnd, 0, x, y, width, height,
 			SWP_NOACTIVATE | SWP_NOZORDER);
@@ -275,7 +391,7 @@ void Label::resize(int width, int height)
 	this->height = height;
 	this->width = width;
 
-	if(hWnd != 0)
+	if(hWnd)
 	{
 		SetWindowPos(hWnd, 0, 0, 0, width, height,
 			SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
@@ -284,36 +400,23 @@ void Label::resize(int width, int height)
 
 void Label::hide()
 {
-	visible = false;
-
-	if(hWnd != 0)
+	if(hWnd)
+	{
+		visible = false;
 		ShowWindow(hWnd, SW_HIDE);
+	}
 }
 
 void Label::show()
 {
-	if(hWnd == 0)
+	if (!hWnd)
+		load(hInstance, box);
+	
+	if(hWnd)
 	{
-		hWnd = CreateWindowEx(box ? 0 : WS_EX_TOOLWINDOW,
-			"LabelLS",
-			name.c_str(),
-			box ? WS_CHILD : WS_POPUP,
-			x, y,
-			width, height,
-			box ? box : GetLitestepWnd(),
-			0,
-			hInstance,
-			this);
-
-		SetWindowLong(hWnd, GWL_USERDATA, 0x49474541);
-		setAlwaysOnTop(alwaysOnTop);
-		if(dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
+		visible = true;
+		ShowWindow(hWnd, SW_SHOWNOACTIVATE);
 	}
-	visible = true;
-	ShowWindow(hWnd, SW_SHOWNOACTIVATE);
-
-	if(scroll)
-		SetTimer(hWnd, TIMER_SCROLL, scrollInterval, 0);
 }
 
 void Label::update()
@@ -431,6 +534,18 @@ void Label::onRButtonUp(int x, int y)
 	}
 }
 
+void Label::onWheelDown(int x, int y)
+{
+	if(wheelDownCommand.length() > 0)
+		LSExecute(hWnd, wheelDownCommand.c_str(), SW_SHOWNORMAL);
+}
+
+void Label::onWheelUp(int x, int y)
+{
+	if(wheelUpCommand.length() > 0)
+		LSExecute(hWnd, wheelUpCommand.c_str(), SW_SHOWNORMAL);
+}
+
 void Label::onMouseEnter()
 {
 	if(enterCommand.length() > 0)
@@ -454,6 +569,13 @@ void Label::onMouseMove(int x, int y)
 	SetTimer(hWnd, TIMER_MOUSETRACK, 100, 0);
 }
 
+void Label::onDrop(const string &file)
+{
+	// TODO: this should make a bit more sense... and should be more flexible
+	string fullCommand = dropCommand + " \"" + file + "\""; // FIXME: ugly hack
+	LSExecute(hWnd, fullCommand.c_str(), SW_SHOWNORMAL);
+}
+
 void Label::onPaint(HDC hDC)
 {
 	RECT r;
@@ -463,9 +585,9 @@ void Label::onPaint(HDC hDC)
 	int height = r.bottom - r.top;
 
 	// keep a cached rendition of the background
-	if(backgroundBitmap == 0)
+	if(!backgroundBitmap)
 	{
-		if(backgroundDC == 0)
+		if(!backgroundDC)
 			backgroundDC = CreateCompatibleDC(hDC);
 
 		backgroundBitmap = CreateCompatibleBitmap(hDC, width, height);
@@ -491,9 +613,9 @@ void Label::onPaint(HDC hDC)
 	}
 
 	// double buffer for flicker-free paint
-	if(bufferBitmap == 0)
+	if(!bufferBitmap)
 	{
-		if(bufferDC == 0)
+		if(!bufferDC)
 			bufferDC = CreateCompatibleDC(hDC);
 
 		bufferBitmap = CreateCompatibleBitmap(hDC, width, height);
@@ -522,20 +644,50 @@ void Label::onPaint(HDC hDC)
 	}
 	else
 	{
-		if(scrollPosition < 0)
-			scrollPosition=textWidth + scrollPadLength;
+		if(scrollPosition <= 0)
+		{
+			scrollPosition = textWidth + scrollPadLength;
+			
+			if (scrollLimit)
+			{
+				scrollLimit--;
+				if (scrollLimit == 0)
+					setScrolling(false);
+			}
+		}
 
 		if(scrollPosition > textWidth + scrollPadLength )
-			scrollPosition=0;
+		{
+			scrollPosition = 0;
+		}
 
-		HRGN oldRGN=NULL;
+		HRGN oldRGN = NULL;
+		HRGN newRGN = NULL;
 		GetClipRgn(bufferDC, oldRGN);
-		HRGN newRGN=CreateRectRgn(leftBorder, topBorder, width - rightBorder, height - bottomBorder);
+		// positive shadows
+		if (shadowY >= 0 && (shadowY-bottomBorder)<0 )
+		{
+			newRGN=CreateRectRgn(leftBorder, topBorder, width - rightBorder, height - bottomBorder + shadowY); // V
+		}
+		else if (shadowY >= 0)
+		{
+			newRGN=CreateRectRgn(leftBorder, topBorder, width - rightBorder, height - bottomBorder); // V
+		}
+		// handle negative shadows
+		else if (shadowY<0 && topBorder+shadowY >= 0)
+		{
+			newRGN=CreateRectRgn(leftBorder, topBorder + shadowY, width - rightBorder, height - bottomBorder); // V
+		}
+		else
+		{
+			newRGN=CreateRectRgn(leftBorder, 0, width - rightBorder, height - bottomBorder); // V
+		}
+		
 		SelectClipRgn(bufferDC, newRGN);
 		DeleteObject(newRGN);
 
 		font->apply(bufferDC,
-			leftBorder,
+			leftBorder, //(width - textWidth) / 2 - 2,
 			topBorder,
 			scrollPosition - scrollPadLength,
 			height - topBorder - bottomBorder,
@@ -564,14 +716,14 @@ void Label::onSize(int width, int height)
 	this->height = height;
 	this->width = width;
 
-	if(backgroundDC != 0 && backgroundBitmap != 0)
+	if(backgroundDC && backgroundBitmap)
 	{
 		backgroundBitmap = (HBITMAP) SelectObject(backgroundDC, backgroundBitmap);
 		DeleteObject(backgroundBitmap);
 		backgroundBitmap = 0;
 	}
 
-	if(bufferDC != 0 && bufferBitmap != 0)
+	if(bufferDC && bufferBitmap)
 	{
 		bufferBitmap = (HBITMAP) SelectObject(bufferDC, bufferBitmap);
 		DeleteObject(bufferBitmap);
@@ -610,7 +762,7 @@ void Label::onTimer(int timerID)
 
 		case TIMER_SCROLL:
 
-			scrollPosition-=scrollSpeed;
+			scrollPosition -= scrollSpeed;
 			repaint();
 
 		break;
@@ -624,6 +776,8 @@ void Label::onWindowPosChanged(WINDOWPOS *windowPos)
 
 boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
+	extern HWND messageHandler;
+	
 	switch(message)
 	{
 		case LM_SETLABELTEXT:
@@ -639,7 +793,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 			if(cds->dwData == LM_SETLABELTEXT)
 				setText(string((const char *) cds->lpData));
 
-			return true;
+			return false;
 		}
 
 		case WM_CLOSE:
@@ -650,21 +804,39 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 
 		case WM_DESTROY:
 		{
-			if(box)
+			if(box)		// FIXME: this is the old workaround
 			{
-				//hide or destroy is the Question - i take hide - blkhawk
-				this->hide();
-				this->setBox(0);
-
-				//Uncomment these to destroy the Label when the parent box gets killed
-				/*hWnd = 0;
-				labelList.remove(this);
-				delete this;*/
+				box = NULL;
+				hide();
 			}
-
+				
+			hWnd = NULL;	// FIXME: dirty hack
+			
 			return false;
 		}
 
+		case WM_DROPFILES:
+		{
+			if(dropCommand.empty())	// we shouldn't get here... but somehow we did :p
+				break;
+			
+			int numDropped, i;
+			char szFile[MAX_PATH_LENGTH];
+			
+			numDropped = DragQueryFile((HDROP) wParam, 0xFFFFFFFF, NULL, 0);
+			for (i = 0; i < numDropped; i++)
+			{
+				DragQueryFile((HDROP) wParam, i, (char *)&szFile, MAX_PATH_LENGTH);
+				if (szFile && szFile[0])
+				{
+					onDrop(szFile);
+				}
+			}
+			DragFinish((HDROP) wParam);
+			
+			return 0;
+		}
+		
 		case WM_LBUTTONDBLCLK:
 		{
 			if(leftDoubleClickCommand.empty())
@@ -773,6 +945,32 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 			return true;
 		}
 
+		case WM_MOUSEWHEEL:
+		{
+			if ((short)(HIWORD(wParam)) < 0)
+			{
+				if(wheelDownCommand.empty())
+				{
+					relayMouseMessageToBox(message, wParam, lParam);
+					return true;
+				}
+
+				onWheelDown((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
+				return true;
+			}
+			else
+			{
+				if(wheelUpCommand.empty())
+				{
+					relayMouseMessageToBox(message, wParam, lParam);
+					return true;
+				}
+				
+				onWheelUp((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
+				return true;
+			}
+		}
+
 		case WM_MOUSEMOVE:
 		{
 			onMouseMove((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
@@ -784,14 +982,14 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 			PAINTSTRUCT ps;
 			HDC hDC;
 
-			if(wParam == 0)
+			if(!wParam)
 				hDC = BeginPaint(hWnd, &ps);
 			else
 				hDC = (HDC) wParam;
 
 			onPaint(hDC);
 
-			if(wParam == 0)
+			if(!wParam)
 				EndPaint(hWnd, &ps);
 
 			return true;
@@ -821,7 +1019,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 
 LRESULT Label::windowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	Label *label = (Label *) GetWindowLong(hWnd, 0);
+	Label *label = NULL;
 
 	if(message == WM_NCCREATE)
 	{
@@ -829,6 +1027,8 @@ LRESULT Label::windowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 		label->hWnd = hWnd;
 		SetWindowLong(hWnd, 0, (LONG) label);
 	}
+	else
+		label = (Label *) GetWindowLong(hWnd, 0);
 
 	if(label)
 	{

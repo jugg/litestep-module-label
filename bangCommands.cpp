@@ -23,31 +23,34 @@ void ToggleAlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, cons
 void ToggleBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
-
-struct bangcmddef {			// FIXME: move into .h?
-	const char *Name;
-	BangCommandEx *Command;
-};
+void ScrollBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void RefreshBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 
 bangcmddef MinimalBangs[] = {
 	{ "!%sHide", HideBangCommand },
 	{ "!%sShow", ShowBangCommand },
+	{ "!%sRefresh", RefreshBangCommand },
 	{ NULL, NULL }
 };
 
 bangcmddef FullBangs[] = {
-	{ "!%sAlwaysOnTop", AlwaysOnTopBangCommand },
 	{ "!%sDestroy", DestroyBangCommand },
 	{ "!%sMove", MoveBangCommand },
-	{ "!%sPinToDesktop", PinToDesktopBangCommand },
 	{ "!%sReposition", RepositionBangCommand },
 	{ "!%sResize", ResizeBangCommand },
 	{ "!%sSetFontColor", SetFontColorBangCommand },
 	{ "!%sSetText", SetTextBangCommand },
-	{ "!%sToggleAlwaysOnTop", ToggleAlwaysOnTopBangCommand },
 	{ "!%sToggle", ToggleBangCommand },
 	{ "!%sUpdate", UpdateBangCommand },
 	{ "!%sClipboard", ClipboardBangCommand },
+	{ "!%sScroll", ScrollBangCommand },
+	{ NULL, NULL }
+};
+
+bangcmddef NoBoxBangs[] = {
+	{ "!%sAlwaysOnTop", AlwaysOnTopBangCommand },
+	{ "!%sPinToDesktop", PinToDesktopBangCommand },
+	{ "!%sToggleAlwaysOnTop", ToggleAlwaysOnTopBangCommand },
 	{ NULL, NULL }
 };
 
@@ -58,27 +61,34 @@ void AddBangCommands(const string &labelName, int &bangs)
 	// code taken from RabidModuleBangs
 
 	bangcmddef *pBang;
+	char name[MAX_BANGCOMMAND];
 
-	if (bangs) {
+	if (bangs >=1 ) {
 		pBang = MinimalBangs;
 		while (pBang->Name != NULL) {
-			char name[64];
-
-			wsprintf(name, pBang->Name, labelName.c_str());
+			StringCchPrintf(name, MAX_BANGCOMMAND, pBang->Name, labelName.c_str());
 			AddBangCommandEx(name, pBang->Command);
 			pBang++;
 		}
 
-		if (bangs==5) {
+		if (bangs >= 5) {
 			pBang = FullBangs;
 			while (pBang->Name != NULL) {
-				char name[64];
-
-				wsprintf(name, pBang->Name, labelName.c_str());
+				StringCchPrintf(name, MAX_BANGCOMMAND, pBang->Name, labelName.c_str());
 				AddBangCommandEx(name, pBang->Command);
 				pBang++;
 			}
 		}
+
+		if (bangs == 6) {
+			pBang = NoBoxBangs;
+			while (pBang->Name != NULL) {
+				StringCchPrintf(name, MAX_BANGCOMMAND, pBang->Name, labelName.c_str());
+				AddBangCommandEx(name, pBang->Command);
+				pBang++;
+			}
+		}
+		
 	}
 }
 
@@ -86,27 +96,34 @@ void AddBangCommands(const string &labelName, int &bangs)
 void RemoveBangCommands(const string &labelName, int &bangs)
 {
 	bangcmddef *pBang;
-
+	char name[MAX_BANGCOMMAND];
+	
 	if (bangs) {
 		pBang = MinimalBangs;
 		while (pBang->Name != NULL) {
-			char name[64];
-
-			wsprintf(name, pBang->Name, labelName.c_str());
+			StringCchPrintf(name, MAX_BANGCOMMAND, pBang->Name, labelName.c_str());
 			RemoveBangCommand(name);
 			pBang++;
 		}
 
-		if (bangs==5) {
+		if (bangs>=5) {
 			pBang = FullBangs;
 			while (pBang->Name != NULL) {
-				char name[64];
-
-				wsprintf(name, pBang->Name, labelName.c_str());
+				StringCchPrintf(name, MAX_BANGCOMMAND, pBang->Name, labelName.c_str());
 				RemoveBangCommand(name);
 				pBang++;
 			}
 		}
+
+		if (bangs == 6) {
+			pBang = NoBoxBangs;
+			while (pBang->Name != NULL) {
+				StringCchPrintf(name, MAX_BANGCOMMAND, pBang->Name, labelName.c_str());
+				RemoveBangCommand(name);
+				pBang++;
+			}
+		}
+		
 	}
 }
 
@@ -123,31 +140,27 @@ void LsBoxHookBangCommand(HWND caller, const char *arguments)
 {
 	char labelName[MAX_LINE_LENGTH];
 	LPCTSTR nextToken[MAX_LINE_LENGTH];
-
+	
 	GetToken(arguments,labelName,nextToken,false);
+	
+	char *handle = strrchr(arguments,' ');
+	HWND boxWnd = (HWND)atoi(handle+1);
 
+	if (!boxWnd)
+		return;
+	
 	//check if the label is already running
 	Label *label = lookupLabel(labelName);
-
-    if (label == 0) 
+	
+    if (!label) 
 	{
 		label = new Label(labelName);
-		label->load(hInstance);
+		label->load(hInstance, boxWnd);
 		labelList.insert(labelList.end(), label);
+	} else {
+		label->setBox(boxWnd);
+		label->update();
 	}
-
-	char *handle = strrchr(arguments,' ');
-
-	if ((label != 0)&&(handle))
-		{
-			HWND boxWnd = (HWND)atoi(handle+1);
-			if (boxWnd) 
-			{
-				label->setBox(boxWnd);
-				label->show();
-				label->update();
-			}
-		}
 }
 
 // display label debugging info
@@ -161,7 +174,7 @@ void DebugBangCommand(HWND caller, const char *arguments)
 		Label *label = *it;
 		string temp = label->getName();
 
-		if(label->getBox() != 0)
+		if(label->getBox())
 		{
 			char buffer[80];
 			GetWindowText(label->getBox(), buffer, 80);
@@ -176,7 +189,7 @@ void DebugBangCommand(HWND caller, const char *arguments)
 	MessageBox(caller,
 		message.c_str(),
 		"Label Debug Info",
-		MB_SETFOREGROUND);
+		MB_OK | MB_TOPMOST | MB_TASKMODAL);
 }
 
 // make a label always on top
@@ -316,8 +329,8 @@ void SetFontColorBangCommand(HWND caller, const char *bangCommandName, const cha
 		}
 		else
 		{
-			color = parseInt(red, 16);
-			color = MAKELONG(HIWORD(color), LOWORD(color));
+			color = strtol(red,NULL,16);
+			color = RGB(GetBValue(color), GetGValue(color), GetRValue(color));
 		}
 		
 		label->getFont()->setColor(color);
@@ -393,26 +406,61 @@ void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *
 			HGLOBAL hClipBuffer;
 			char* pszBuffer;
 			EmptyClipboard();
-			if(arguments)
+			if(arguments[0])
 			{
-				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, sText.length()+strlen(arguments)+2);
+				DWORD dwBytes = sText.length()+strlen(arguments)+2;
+				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, dwBytes);
 				pszBuffer = (char*)GlobalLock(hClipBuffer);
-				strcpy(pszBuffer, arguments);
-				strcat(pszBuffer, " ");
-				strcat(pszBuffer, sText.c_str());
+				StringCbCopy(pszBuffer, dwBytes, arguments);
+				StringCbCat(pszBuffer, dwBytes, " ");
+				StringCbCat(pszBuffer, dwBytes, sText.c_str());
 			}
 			else
 			{
-				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, sText.length()+1);
+				DWORD dwBytes = sText.length()+1;
+				hClipBuffer = GlobalAlloc(GMEM_DDESHARE, dwBytes);
 				pszBuffer = (char*)GlobalLock(hClipBuffer);
 				memset(pszBuffer, 0, 1);
-				strcpy(pszBuffer, sText.c_str());
+				StringCbCopy(pszBuffer, dwBytes, sText.c_str());
 			}
 			GlobalUnlock(hClipBuffer);
 			SetClipboardData(CF_TEXT, hClipBuffer);
 			CloseClipboard();
 		}
 	}
+}
+
+// turn scrolling on/off
+void ScrollBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 7));
+	
+	if(!label)
+		return;
+	
+	if (stricmp(arguments, "on") == 0)
+		label->setScrolling(true);
+
+	else if (stricmp(arguments, "off") == 0)
+		label->setScrolling(false);
+
+	else if (stricmp(arguments, "toggle") == 0)
+		label->isScrolling() ? label->setScrolling(false) : label->setScrolling(true);
+
+	else
+	{
+		int limit = strtol(arguments,NULL,10);
+		if(limit >= 0) label->setScrollLimit(limit);
+	}
+}
+
+void RefreshBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 8));
+	
+	if(label != 0) label->reconfigure();
 }
 
 // value of digit char

@@ -1,3 +1,19 @@
+1.96, 08-13-2002 (ilmcuts, MickeM, Vendicator)
+- fixed all known resource leaks
+- fixed !bang commands not being properly removed
+- fixed scrolling
+- fixed LabelScrollPad not working
+- fixed !LabelSetFontColor not working correctly with hexadecimal (8040FF) parameters
+- fixed !LabelLsBoxHook ignoring LabelStartHidden
+- a "boxed" label no longer registers !bangs that don't work inside of boxes
+- no more default "label". Thus it is possible to use labels exclusively in
+  lsboxes, without a "Labels <list>" setting in step.rc.
+- added !refresh support
+- added !LabelScroll
+- added !LabelRefresh. Call this after !reload to reconfigure a single label.
+- added LabelOnWheelDown/LabelOnWheelUp
+- added LabelOnDrop
+
 1.95, 05-28-2002
 - fixed [cpu] bug in non-English versions of Win2K/XP
 - label names can now contain periods

@@ -13,6 +13,9 @@ public:
 	void measure(HDC hDC, const string &text, unsigned int flags, long *width, long *height);
 	
 	void setColor(int aColor);
+
+	int shadowX; // V
+	int shadowY; 
 	
 private:
 
@@ -27,8 +30,6 @@ private:
 
 	boolean shadow;
 	int shadowColor;
-	int shadowX;
-	int shadowY;
 
 	void createHandle();
 };

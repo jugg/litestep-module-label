@@ -62,6 +62,7 @@ private:
 	// miscellaneous info
 	string getActiveTask(boolean *dynamic);
 	string getCPU(boolean *dynamic);
+	string getLSVar(const string &name, boolean *dynamic);
 	string getOS(boolean *dynamic);
 	string getRandomLine(const string &file, boolean *dynamic);
 	string getWindowTitle(const string &windowClass, boolean *dynamic);
@@ -100,5 +101,4 @@ private:
 };
 
 extern SystemInfo *systemInfo;
-
 #endif

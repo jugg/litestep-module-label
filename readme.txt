@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.95
+                                Label 1.96
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
                         ilmcuts <ilmcuts@gmx.net>
-                        Last Modified: 05-28-2002
+                        Last Modified: 08-13-2002
 --------------------------------------------------------------------------
 
 Overview
@@ -12,7 +12,8 @@ Overview
 Label.dll is a Litestep-loadable module that allows you to define multiple
 skinnable labels and place them anywhere on your desktop. Labels can
 display static text and dynamically updating system information that can
-be updated at run-time using bang commands.
+be updated at run-time using bang commands. Label supports the !refresh
+command.
 
 
 Loading the Module
@@ -23,9 +24,8 @@ Add a new LoadModule line to the step.rc file, similar to the following
 
 LoadModule "C:\Litestep\label.dll"
 
-Now recycle Litestep and you should see a small blank label in the upper-
-left-hand corner of the desktop. The following sections describe how to
-configure label.dll to actually do something useful.
+The following sections describe how to configure label.dll to actually do
+something useful. Once you're done configuring, recycle Litestep.
 
 
 Configuration
@@ -176,7 +176,7 @@ Controls the number of !bangs Label registers. "none" will register no
 !bangs except for the label-core !bangs !labelcreate, !labeldebug and
 !labellsboxhook. "minimal" will register !LabelShow and !LabelHide, while
 "all" will register, all !bangs. If no value is provided then the default
-is "all".
+is "all". This setting is not re-evaluated on !refresh.
 
 LabelUseFahrenheit
 If this command is present, mbmTemperature (see below) is diplayed in
@@ -186,14 +186,17 @@ LabelLSBoxName <name>
 Sets the name of the box (lsbox.dll) that this label should be loaded
 into. The default is no value in which case the label is loaded normally.
 See the section below entitled 'Using Labels inside LSBox' for more
-information.
+information. This setting is only necessary if the "boxed" label is
+included in a "Labels" line.
 
 LabelScroll
-If this command is present then the label scrolls its contents.
+If this command is present then the label scrolls its contents if the text
+doesn't fit into the label. Note that the text might "jump" a bit if
+LabelJustify is not set to "left".
 
-LabelScrollInterval <numer>
+LabelScrollInterval <number>
 Sets the scrolling update interval in milliseconds. If no value is
-provided then the default is 200.
+provided then the default is 100.
 
 LabelScrollSpeed <number>
 Sets the number of pixels to scroll for each update. Negative values allow
@@ -258,6 +261,15 @@ Forces the label to update its contents.
 Copies the contents of the label to the clipboard. If the parameter is
 present, it will be printed in front of the label contents.
 
+!LabelScroll <number>, "on", "off", or "toggle"
+Depending on the parameter this command toggles scrolling/turns it on or off.
+If the parameter is a number the label scrolls the given number of times. If
+the number is 0 and the label is already scrolling it'll finish the "current
+scroll" and then stop.
+
+!LabelRefresh
+Call this after !reload to reconfigure the label
+
 
 Events
 ------
@@ -295,6 +307,19 @@ Sets an action to perform when the mouse cursor enters the label.
 
 LabelOnMouseLeave <action>
 Sets an action to perform when the mouse cursor leaves the label.
+
+LabelOnWheelDown <action>
+Sets an action to perform when the mouse wheel scrolls down while the
+mouse cursor hovers over the label.
+
+LabelOnWheelUp <action>
+Sets an action to perform when the mouse wheel is scrolled up while the
+mouse cursor hovers over the label.
+
+LabelOnDrop <action>
+Sets an action to perform when a file or a folder is dropped on the label.
+The full path to the file/folder is passed to the action as an argument.
+
 
 
 Multiple Labels
@@ -337,8 +362,8 @@ more "Labels" commands:
 Labels <name-list>
 Gives the names of the labels you wish to define. All names must be unique
 and can only contain letters and numbers (no symbols or spaces). Separate
-names with commas and do not use quotes. If no value is provided then a
-single label named "Label" is created by default.
+names with commas and do not use quotes. If no value is provided no label
+will be created by default.
 
 As of version 1.5 it is also possible to create and destroy labels as
 Litestep is running. The !LabelCreate bang command takes the name of a
@@ -582,6 +607,8 @@ MotherBoard Monitor: As of version 1.9 of Label the MBM data sources
 [mbm*] require MBM version 5.1 (or higher). Due to the nature of the
 changes this makes Label 1.9 incompatible with earlier versions of MBM.
 
+If you want to include [ or ] in your label's text, use [[ and ]].
+
 
 Default Configurations using AllLabels
 --------------------------------------
@@ -623,8 +650,15 @@ To load a label into a box add a line like the following to your .box file.
 
 *ModuleHook !LabelLsBoxHook <name of the label>
 
-It works like !LabelCreate, in other words all the labeol settings are
-stored in the .rc file.
+It works like !LabelCreate, in other words all the label settings are
+stored in the .rc file. The label is created automatically when lsbox calls
+!LabelLsBoxHook, thus you shouldn't include "boxed" labels in your
+"Labels <name-list>" command(s) to avoid flickering.
+
+The following !bang commands are not available for labels inside of boxes:
+	!LabelAlwaysOnTop
+	!LabelPinToDesktop
+	!LabelToggleAlwaysOnTop
 
 You can use labels both inside and outside of boxes.
 

@@ -9,14 +9,16 @@ ImageTexture::ImageTexture()
 	memoryBitmap = 0;
 }
 
-ImageTexture::~ImageTexture()
+ImageTexture::~ImageTexture()	// it seems this destructor is never called
 {
-	if(bitmap != 0)
+	if(bitmap)
 	{
+//		bitmap = (HBITMAP) SelectObject(memoryDC, memoryBitmap);
 		SelectObject(memoryDC, memoryBitmap);
-		DeleteDC(memoryDC);
 		DeleteObject(bitmap);
 	}
+	if(memoryDC)
+		DeleteDC(memoryDC);
 }
 
 NameValuePair modeConstants[] =

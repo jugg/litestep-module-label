@@ -5,6 +5,68 @@
 #include "BlankTexture.h"
 #include "ImageTexture.h"
 
+boolean IsOS(const int &os)
+{	
+	static int osversion = 0;
+
+	static boolean bInitialized = false;
+
+	if (!bInitialized)
+	{
+		OSVERSIONINFO verInfo;
+		verInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+		GetVersionEx(&verInfo);
+		
+		switch(verInfo.dwPlatformId)
+		{
+			case VER_PLATFORM_WIN32_WINDOWS:
+
+				osversion |= OS_9X;
+			
+				if(verInfo.dwMinorVersion >= 90)
+				{
+					osversion |= OS_ME;
+				}
+				else if(verInfo.dwMinorVersion >= 10)
+				{
+					osversion |= OS_98;
+				}
+				else
+				{
+					osversion |= OS_95;
+				}
+				break;
+			
+			case VER_PLATFORM_WIN32_NT:
+			
+				osversion |= OS_NT;
+			
+				if(verInfo.dwMajorVersion >= 5)
+				{
+					osversion |= OS_2KXP;
+
+					if (verInfo.dwMinorVersion >= 1)
+					{
+						osversion |= OS_XP;
+					}
+					else
+					{
+						osversion |= OS_2K;
+					}
+				}
+				else
+				{
+					osversion |= OS_NT4;
+				}
+				break;
+			default:;
+		}
+		bInitialized = true;
+	}
+
+	return (osversion & os) ? true : false;
+}
+
 // trim leading and trailing whitespace
 string trim(const string &toTrim)
 {
@@ -32,7 +94,7 @@ HWND GetLitestepDesktop()
 }
 
 // is the given window a toplevel application window?
-boolean IsAppWindow(HWND hWnd)
+boolean IsAppWindow(const HWND &hWnd)
 {
 	if(!IsWindowVisible(hWnd))
 		return false;
@@ -48,7 +110,7 @@ boolean IsAppWindow(HWND hWnd)
 	if(exStyle & WS_EX_TOOLWINDOW)
 		return false;
 
-	if(GetWindowLong(hWnd, GWL_USERDATA) == 0x49474541)
+	if(GetWindowLong(hWnd, GWL_USERDATA) == magicDWord)
 		return false;
 
 	return true;
@@ -59,16 +121,6 @@ void ModifyStyle(HWND hWnd, DWORD removeStyle, DWORD addStyle)
 {
 	SetWindowLong(hWnd, GWL_STYLE,
 		(GetWindowLong(hWnd, GWL_STYLE) & ~removeStyle) | addStyle);
-}
-
-// check to see if a given key exists in the step.rc
-int keyExists(const string &key)
-{
-	const char fakeValue[] = "\001";
-	char buffer[4];
-
-	GetRCString(key.c_str(), buffer, fakeValue, 4);
-	return buffer[0] != '\001';
 }
 
 // retrieve a boolean value from the step.rc
@@ -222,7 +274,7 @@ int GetRCDimension(const string &prefix, const string &baseName, int defaultVal,
 }
 
 // retrieve a font from step.rc
-Font *GetRCFont(const string &object, const string &subKey, Font *defaultVal)
+Font *GetRCFont(const string &object, Font *defaultVal)
 {
 	Font *font = new Font;
 	font->configure(object, defaultVal);
@@ -280,26 +332,25 @@ StringList ParseNameList(const string &source)
 }
 
 // retrieve a list of names from step.rc
-StringList GetRCNameList(const string &prefix, const string &baseName)
+StringList GetRCNameList(const string &prefix)
 {
-	string name = prefix + baseName;
 	StringList resultList;
 	FILE *f;
 
-	if(f = LCOpen(0))
+	if(f = LCOpen(NULL))
 	{
-		char lineBuffer[1024];
+		char lineBuffer[MAX_LINE_LENGTH];
 
-		while(LCReadNextCommand(f, lineBuffer, 1024))
+		while(LCReadNextConfig(f, prefix.c_str(), lineBuffer, MAX_LINE_LENGTH))
 		{
-			char *buffers[1];
-			char commandName[64];
-			char value[1024];
-
+			char* buffers[1];
+			char commandName[64] = { 0 };
 			buffers[0] = commandName;
+			
+			char value[MAX_LINE_LENGTH];
 			LCTokenize(lineBuffer, buffers, 1, value);
 
-			if(stricmp(commandName, name.c_str()) == 0)
+			if(value[0] && stricmp(prefix.c_str(), commandName) == 0)
 			{
 				StringList sl = ParseNameList(value);
 				resultList.insert(resultList.end(), sl.begin(), sl.end());
@@ -378,7 +429,7 @@ string GetRCLine(const string &object, const string &subKey, const string &defau
 string GetRCString(const string &object, const string &subKey, const string &defaultVal)
 {
 	string key = object + subKey;
-	char buffer[1024];
+	char buffer[MAX_LINE_LENGTH];
 	GetRCString(key.c_str(), buffer, defaultVal.c_str(), 1024);
 	return string(buffer);
 }
@@ -399,13 +450,13 @@ string GetRCString(const string &object, const string &subKey, const string &def
 }
 */
 
-StringVector GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal)
+/*StringVector GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal)
 {
 	string name = prefix + baseName;
 	StringVector result;
 	FILE *f;
 
-	if(f = LCOpen(0))
+	if(f = LCOpen(NULL))
 	{
 		char lineBuffer[1024];
 
@@ -431,10 +482,10 @@ StringVector GetRCStringVector(const string &prefix, const string &baseName, con
 
 	if(result.empty() && !defaultVal.empty()) result.push_back(defaultVal);
 	return result;
-}
+}*/
 
 // retrieve a texture from step.rc
-Texture *GetRCTexture(const string &object, const string &subKey, Texture *defaultVal)
+Texture* GetRCTexture(const string &object, const string &subKey, Texture* defaultVal)
 {
 	Texture *texture;
 
@@ -895,7 +946,7 @@ LPTSTR RegQueryStringValue(HKEY hKey, LPCTSTR pszSubKey, LPCTSTR pszValueName, L
 		
 		if(lErrorCode != ERROR_SUCCESS)
 		{
-			lstrcpyn(pszBuffer, pszDefaultValue, nBufferSize);
+			StringCchCopy(pszBuffer, nBufferSize, pszDefaultValue);
 			return pszBuffer;
 		}
 		
@@ -909,7 +960,7 @@ LPTSTR RegQueryStringValue(HKEY hKey, LPCTSTR pszSubKey, LPCTSTR pszValueName, L
 		RegCloseKey(hSubKey);
 		
 	if(dwDataType != REG_SZ || lErrorCode != ERROR_SUCCESS)
-		lstrcpyn(pszBuffer, pszDefaultValue, nBufferSize);
+		StringCchCopy(pszBuffer, nBufferSize, pszDefaultValue);
 	
 	return pszBuffer;
 }

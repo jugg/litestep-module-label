@@ -98,10 +98,6 @@ SOURCE=.\bangCommands.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\debug.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\DefaultTexture.cpp
 # End Source File
 # Begin Source File
@@ -155,10 +151,6 @@ SOURCE=.\BlankTexture.h
 # Begin Source File
 
 SOURCE=.\common.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\debug.h
 # End Source File
 # Begin Source File
 

@@ -71,7 +71,7 @@ void Font::apply(HDC hDC, int x, int y, int width, int height, const string &tex
 
 void Font::measure(HDC hDC, const string &text, unsigned int flags, long *width, long *height)
 {
-	hFont=(HFONT) SelectObject(hDC, hFont);
+	hFont = (HFONT) SelectObject(hDC, hFont);
 
 	LPSIZE lpsize=new SIZE;
 
@@ -80,7 +80,7 @@ void Font::measure(HDC hDC, const string &text, unsigned int flags, long *width,
 
 	GetTextExtentPoint32(hDC, text.c_str(), strlen(text.c_str()), lpsize);
 
-	hFont=(HFONT) SelectObject(hDC, hFont);
+	hFont = (HFONT) SelectObject(hDC, hFont);
 
 	*width=lpsize->cx;
 	*height=lpsize->cy;
@@ -96,7 +96,7 @@ void Font::createHandle()
 	LOGFONT lf;
 	memset(&lf, 0, sizeof(LOGFONT));
 
-	strncpy(lf.lfFaceName, name.c_str(), LF_FACESIZE);
+	StringCchCopy(lf.lfFaceName, LF_FACESIZE, name.c_str());
 	lf.lfHeight = height;
 	lf.lfItalic = italic ? TRUE : FALSE;
 	lf.lfWeight = bold ? FW_BOLD : FW_NORMAL;

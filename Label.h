@@ -19,9 +19,8 @@ public:
 
 	boolean isAlwaysOnTop() const { return alwaysOnTop; }
 	boolean isVisible() const { return visible; }
+	boolean isScrolling() const { return scroll; }
 	boolean bUseFahrenheit;
-
-	HWND getBox() const { return box; }
 
 	int bangCommands;		// probably shouldn't be public but i'm lazy...
 	
@@ -38,6 +37,7 @@ public:
 	int getRightBorder() const { return rightBorder; }
 	int getBottomBorder() const { return bottomBorder; }
 
+	const HWND &getBox() const { return box; }
 	const string &getName() const { return name; }
 	const string &getText() const { return text; }
 
@@ -52,6 +52,8 @@ public:
 	void setTopBorder(int topBorder);
 	void setRightBorder(int rightBorder);
 	void setBottomBorder(int bottomBorder);
+	void setScrolling(boolean scrolling);
+	void setScrollLimit(int limit);
 
 	void repaint(boolean invalidateCache = false);
 
@@ -80,19 +82,24 @@ private:
 
 	boolean alwaysOnTop;
 	boolean visible;
+	boolean bUsingDefSkin;
+	boolean bInDestructor;
 
 	int height;
 	int width;
 	int x;
 	int y;
 
+	int shadowY; // V
+
 	int scrollPadLength;
 	int scrollInterval;
 	int scrollSpeed;
 	boolean scroll;
 	int scrollPosition;
+	UINT scrollLimit;
 
-	boolean trueTransparency;
+//	boolean trueTransparency;
 
 	int updateInterval;
 	int justify;
@@ -117,8 +124,11 @@ private:
 	string middleDoubleClickCommand;
 	string rightClickCommand;
 	string rightDoubleClickCommand;
+	string wheelDownCommand;
+	string wheelUpCommand;
 	string enterCommand;
 	string leaveCommand;
+	string dropCommand;
 
 protected:
 
@@ -133,9 +143,12 @@ protected:
 	virtual void onRButtonDblClk(int x, int y);
 	virtual void onRButtonDown(int x, int y);
 	virtual void onRButtonUp(int x, int y);
+	virtual void onWheelDown(int x, int y);
+	virtual void onWheelUp(int x, int y);
 	virtual void onMouseEnter();
 	virtual void onMouseLeave();
 	virtual void onMouseMove(int x, int y);
+	virtual void onDrop(const string &file);
 	virtual void onPaint(HDC hDC);
 	virtual void onSize(int width, int height);
 	virtual void onTimer(int timerID);

@@ -7,6 +7,16 @@ class Texture;
 const int MAX_INTEGER = 0x7FFFFFFF;
 const int MIN_INTEGER = 0x80000000;
 
+#define OS_9X   0x0001
+#define OS_NT   0x0002
+#define OS_95   0x0004
+#define OS_98   0x0008
+#define OS_ME   0x0010
+#define OS_NT4  0x0020
+#define OS_2K   0x0040
+#define OS_XP   0x0080
+#define OS_2KXP 0x0100
+
 enum
 {
 	MULTIBLT_STRETCH,
@@ -22,7 +32,8 @@ struct NameValuePair
 };
 
 HWND GetLitestepDesktop();
-boolean IsAppWindow(HWND hWnd);
+boolean IsAppWindow(const HWND &hWnd);
+boolean IsOS(const int &os);
 void ModifyStyle(HWND hWnd, DWORD removeStyle, DWORD addStyle);
 
 boolean GetRCBoolean(const string &prefix, const string &baseName, boolean defaultVal = false);
@@ -31,13 +42,13 @@ int ParseCoordinate(const string &aString, int defaultVal, int maxVal);
 int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal);
 int ParseDimension(const string &aString, int defaultVal, int maxVal);
 int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal);
-Font *GetRCFont(const string &prefix, const string &baseName, Font *defaultVal = 0);
+Font *GetRCFont(const string &prefix, Font *defaultVal = 0);
 int GetRCInt(const string &prefix, const string &baseName, int defaultVal, int minVal = MIN_INTEGER, int maxVal = MAX_INTEGER);
 string GetRCLine(const string &prefix, const string &baseName, const string &defaultVal);
 int GetRCNamedValue(const string &prefix, const string &baseName, const NameValuePair *nameValuePairs, int defaultVal);
-StringList GetRCNameList(const string &prefix, const string &baseName);
+StringList GetRCNameList(const string &prefix);
 string GetRCString(const string &prefix, const string &baseName, const string &defaultVal);
-vector<string> GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal);
+//vector<string> GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal);
 Texture *GetRCTexture(const string &prefix, const string &baseName, Texture *defaultVal = 0);
 
 void PaintDesktopEx(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, int xSrc, int ySrc, BOOL updateCache);

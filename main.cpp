@@ -2,13 +2,21 @@
 #include "bangCommands.h"
 #include "Label.h"
 #include "SystemInfo.h"
+#include "LabelSettings.h"
 
 HINSTANCE hInstance;
 HWND messageHandler;
 LabelList labelList;
-boolean initialized = false;
+
+int lsMessages[] = {
+	LM_GETREVID,
+	LM_REFRESH,
+	0
+};
 
 #define LM_UPDATEBG (WM_USER + 1)
+
+Label *lookupLabel(const string &name);
 
 LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -16,10 +24,59 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			char revID[80];
-			wsprintf(revID, "%s %s (%s)", V_NAME, V_VERSION, V_AUTHOR);
-			strcpy((char *) lParam, revID);
-			return strlen(revID);
+			UINT uLength;
+			StringCchPrintf((char*)lParam, 64, "%s %s (%s)", V_NAME, V_VERSION, V_AUTHOR);
+			
+			if (SUCCEEDED(StringCchLength((char*)lParam, 64, &uLength)))
+				return uLength;
+
+			lParam = NULL;
+			return 0;
+		}
+		
+		case LM_REFRESH:
+		{
+			StringList labelNames = GetRCNameList("Labels");
+
+			// refresh the "AllLabels" configuration
+			delete defaultSettings;
+			defaultSettings = new LabelSettings();
+
+			for(LabelListIterator iter = labelList.begin(); iter != labelList.end(); iter++)
+			{
+				if(!(*iter)->getBox())
+				{
+					// destroy all labels that no longer exist and that are not in a box
+					for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
+					{
+						if(stricmp((*it).c_str(), (*iter)->getName().c_str()) == 0)
+							break;
+					}
+					if (it == labelNames.end())
+					{
+						labelList.remove(*iter);
+						delete *iter;
+						continue;
+					}
+				}
+
+				// we can reconfigure all other labels, even if they are "boxed"
+				(*iter)->reconfigure();
+			}
+
+			// create the rest
+			for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
+			{
+				Label *label = lookupLabel(*it);
+				
+				if (!label) 
+				{
+					label = new Label(*it);
+					label->load(hInstance);
+					labelList.insert(labelList.end(), label);
+				}
+			}
+			return 0;
 		}
 
 		case LM_UPDATEBG:
@@ -47,11 +104,6 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
-
-int lsMessages[] = {
-	LM_GETREVID,
-	0
-};
 
 int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 {
@@ -91,20 +143,27 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 		"LabelMessageHandlerLS",
 		0,
 		WS_POPUP,
-		0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 
+		0,
+		0,
 		hInstance,
 		0);
 
+	if (!messageHandler)
+		return 1;
+	
 	SendMessage(GetLitestepWnd(),
 		LM_REGISTERMESSAGE,
 		(WPARAM) messageHandler,
 		(LPARAM) lsMessages);
 
 	::hInstance = hInstance;
+	defaultSettings = new LabelSettings();
 	systemInfo = new SystemInfo();
 
-	StringList labelNames = GetRCNameList("Labels", "");
-	if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
+	StringList labelNames = GetRCNameList("Labels");
+	labelNames.merge(GetRCNameList("Label"));
+//	if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
 
 	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
 	{
@@ -121,54 +180,7 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 	//LsBox Support - blkhawk
 	AddBangCommand("!LabelLsBoxHook", LsBoxHookBangCommand);
 
-	initialized = true;
 	return 0;
-}
-
-int initWharfModule(HWND hParent, HINSTANCE hInstance, void *pv)
-{
-	if(!initialized)
-	{
-		MessageBox(hParent,
-			"Label.dll must be loaded as a LoadModule before being loaded by Lsbox.dll",
-			"Label",
-			MB_SETFOREGROUND);
-
-		return 1;
-	}
-
-	if(pv == 0)
-	{
-		// loaded as LSBox *Module, hParent is the main box window
-		char boxName[64];
-		GetWindowText(hParent, boxName, 64);
-
-		StringList labelNames = GetRCNameList("", "Labels");
-		if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
-
-		for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
-		{
-			string dockToBox = GetRCString(*it, "LSBoxName", "");
-
-			if(stricmp(boxName, dockToBox.c_str()) == 0)
-			{
-				Label *label = new Label(*it);
-				label->load(hInstance, hParent);
-				labelList.insert(labelList.end(), label);
-			}
-		}
-
-		return 0;
-	}
-	else
-	{
-		MessageBox(hParent,
-			"Label.dll cannot be loaded as a wharf module.",
-			"Label",
-			MB_SETFOREGROUND);
-
-		return 1;
-	}
 }
 
 extern HDC hdcDesktop;
@@ -177,12 +189,14 @@ extern HBITMAP hbmDesktop;
 void quitModule(HINSTANCE hInstance)
 {
 	RemoveBangCommand("!LabelCreate");
+	RemoveBangCommand("!LabelDebug");
+	RemoveBangCommand("!LabelLsBoxHook");
 
 	for(LabelListIterator it = labelList.begin(); it != labelList.end(); it++)
 		delete *it;
 
 	labelList.clear();
-
+	
 	SendMessage(GetLitestepWnd(),
 		LM_UNREGISTERMESSAGE,
 		(WPARAM) messageHandler,
@@ -194,17 +208,11 @@ void quitModule(HINSTANCE hInstance)
 	UnregisterClass("LabelMessageHandlerLS", hInstance);
 
 	delete systemInfo;
+	delete defaultSettings;
 
 	hbmDesktop = (HBITMAP) SelectObject(hdcDesktop, hbmDesktop);
 	DeleteDC(hdcDesktop);
 	DeleteObject(hbmDesktop);
-
-	initialized = false;
-}
-
-void quitWharfModule(HINSTANCE hInstance)
-{
-	// ...
 }
 
 Label *lookupLabel(const string &name)
@@ -222,10 +230,6 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
 {
 	if(dwReason == DLL_PROCESS_ATTACH)
 	{
-		/* TCHAR debugFile[MAX_PATH];
-		GetRCString("LabelDebugFile", debugFile, "", MAX_PATH);
-		DebugSetFileName(debugFile); */
-
 		DisableThreadLibraryCalls(hInstance);
 	}
 

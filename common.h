@@ -13,7 +13,7 @@ class Label;
 
 typedef list<string> StringList;
 typedef list<string>::iterator StringListIterator;
-typedef vector<string> StringVector;
+//typedef vector<string> StringVector;
 typedef list<Label *> LabelList;
 typedef list<Label *>::iterator LabelListIterator;
 
@@ -26,12 +26,15 @@ typedef unsigned __int64 largeInt;
 #include <windows.h>
 #include <windowsx.h>
 #include <winsock.h>
-#include "lsapi.h"
-#include "wharfdata.h"
+#include "../development/lsapi/common.h"
 #include "utility.h"
 #include "verInfo.h"
-#include "debug.h"
+#include "strsafe.h"
 
 #define LM_SETLABELTEXT 9600
+
+#ifndef WM_MOUSEWHEEL
+	#define WM_MOUSEWHEEL 0x020A
+#endif
 
 #endif

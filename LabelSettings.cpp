@@ -13,7 +13,7 @@ NameValuePair justifyValues[] = {
 NameValuePair bangCommandValues[] = {
 	{ "none", 0 },
 	{ "minimal", 1 },
-	{ "all", 5 },
+	{ "all", 5 },	// "6" reserved for lsbox
 	{ 0, 0 }
 };
 
@@ -27,7 +27,7 @@ LabelSettings::LabelSettings()
 	bUseFahrenheit = GetRCBoolean(name, "UseFahrenheit");
 
 	skin = GetRCTexture(name, "");
-	font = GetRCFont(name, "");
+	font = GetRCFont(name);
 	
 	leftBorder = GetRCInt(name, "LeftBorder", 0);
 	topBorder = GetRCInt(name, "TopBorder", 0);
@@ -55,63 +55,70 @@ LabelSettings::LabelSettings()
 	middleDoubleClickCommand = GetRCLine(name, "OnMiddleDoubleClick", "");
 	rightClickCommand = GetRCLine(name, "OnRightClick", "");
 	rightDoubleClickCommand = GetRCLine(name, "OnRightDoubleClick", "");
+	wheelDownCommand = GetRCLine(name, "OnWheelDown", "");
+	wheelUpCommand = GetRCLine(name, "OnWheelUp", "");
 	enterCommand = GetRCLine(name, "OnMouseEnter", "");
 	leaveCommand = GetRCLine(name, "OnMouseLeave", "");
+	dropCommand = GetRCLine(name, "OnDrop", "");
 
-	scrollPadLength = GetRCInt(name, "scrollPadLength", 10); 
+	scrollPadLength = GetRCInt(name, "scrollPad", 10); 
 	scrollInterval = GetRCInt(name, "scrollInterval", 100);
 	scrollSpeed = GetRCInt(name, "scrollSpeed", 1);
 	scroll = GetRCBoolean(name, "scroll", false);
 
-	trueTransparency = GetRCBoolean(name, "trueTransparency", false);
+//	trueTransparency = GetRCBoolean(name, "TrueTransparency", false);
 }
 
 LabelSettings::LabelSettings(const char *name)
 {
 	isDefault = false;
 
-	alwaysOnTop = GetRCBoolean(name, "AlwaysOnTop", defaultSettings.alwaysOnTop);
-	startHidden = GetRCBoolean(name, "StartHidden", defaultSettings.startHidden);
-	bUseFahrenheit = GetRCBoolean(name, "UseFahrenheit", defaultSettings.bUseFahrenheit);
+	alwaysOnTop = GetRCBoolean(name, "AlwaysOnTop", defaultSettings->alwaysOnTop);
+	startHidden = GetRCBoolean(name, "StartHidden", defaultSettings->startHidden);
+	bUseFahrenheit = GetRCBoolean(name, "UseFahrenheit", defaultSettings->bUseFahrenheit);
 
-	skin = GetRCTexture(name, "", defaultSettings.skin);
-	font = GetRCFont(name, "", defaultSettings.font);
+	skin = GetRCTexture(name, "", defaultSettings->skin);
+
+	font = GetRCFont(name, defaultSettings->font);
 	
-	leftBorder = GetRCInt(name, "LeftBorder", defaultSettings.leftBorder);
-	topBorder = GetRCInt(name, "TopBorder", defaultSettings.topBorder);
-	rightBorder = GetRCInt(name, "RightBorder", defaultSettings.rightBorder);
-	bottomBorder = GetRCInt(name, "BottomBorder", defaultSettings.bottomBorder);
+	leftBorder = GetRCInt(name, "LeftBorder", defaultSettings->leftBorder);
+	topBorder = GetRCInt(name, "TopBorder", defaultSettings->topBorder);
+	rightBorder = GetRCInt(name, "RightBorder", defaultSettings->rightBorder);
+	bottomBorder = GetRCInt(name, "BottomBorder", defaultSettings->bottomBorder);
 
-	bangCommands = GetRCNamedValue(name, "BangCommands", bangCommandValues, defaultSettings.bangCommands);
+	bangCommands = GetRCNamedValue(name, "BangCommands", bangCommandValues, defaultSettings->bangCommands);
 
-	justify = GetRCNamedValue(name, "Justify", justifyValues, defaultSettings.justify);
-	updateInterval = GetRCInt(name, "UpdateInterval", defaultSettings.updateInterval);
+	justify = GetRCNamedValue(name, "Justify", justifyValues, defaultSettings->justify);
+	updateInterval = GetRCInt(name, "UpdateInterval", defaultSettings->updateInterval);
 
 	int screenX = GetSystemMetrics(SM_CXSCREEN);
 	int screenY = GetSystemMetrics(SM_CYSCREEN);
 
-	width = GetRCDimension(name, "Width", defaultSettings.width, screenX);
-	height = GetRCDimension(name, "Height", defaultSettings.height, screenY);
-	x = GetRCCoordinate(name, "X", defaultSettings.x, screenX);
-	y = GetRCCoordinate(name, "Y", defaultSettings.y, screenY);
+	width = GetRCDimension(name, "Width", defaultSettings->width, screenX);
+	height = GetRCDimension(name, "Height", defaultSettings->height, screenY);
+	x = GetRCCoordinate(name, "X", defaultSettings->x, screenX);
+	y = GetRCCoordinate(name, "Y", defaultSettings->y, screenY);
 
-	text = GetRCString(name, "Text", defaultSettings.text);
+	text = GetRCString(name, "Text", defaultSettings->text);
 
-	leftClickCommand = GetRCLine(name, "OnLeftClick", defaultSettings.leftClickCommand);
-	leftDoubleClickCommand = GetRCLine(name, "OnLeftDoubleClick", defaultSettings.leftDoubleClickCommand);
-	middleClickCommand = GetRCLine(name, "OnMiddleClick", defaultSettings.middleClickCommand);
-	middleDoubleClickCommand = GetRCLine(name, "OnMiddleDoubleClick", defaultSettings.middleDoubleClickCommand);
-	rightClickCommand = GetRCLine(name, "OnRightClick", defaultSettings.rightClickCommand);
-	rightDoubleClickCommand = GetRCLine(name, "OnRightDoubleClick", defaultSettings.rightDoubleClickCommand);
-	enterCommand = GetRCLine(name, "OnMouseEnter", defaultSettings.enterCommand);
-	leaveCommand = GetRCLine(name, "OnMouseLeave", defaultSettings.leaveCommand);
+	leftClickCommand = GetRCLine(name, "OnLeftClick", defaultSettings->leftClickCommand);
+	leftDoubleClickCommand = GetRCLine(name, "OnLeftDoubleClick", defaultSettings->leftDoubleClickCommand);
+	middleClickCommand = GetRCLine(name, "OnMiddleClick", defaultSettings->middleClickCommand);
+	middleDoubleClickCommand = GetRCLine(name, "OnMiddleDoubleClick", defaultSettings->middleDoubleClickCommand);
+	rightClickCommand = GetRCLine(name, "OnRightClick", defaultSettings->rightClickCommand);
+	rightDoubleClickCommand = GetRCLine(name, "OnRightDoubleClick", defaultSettings->rightDoubleClickCommand);
+	wheelDownCommand = GetRCLine(name, "OnWheelDown", defaultSettings->wheelDownCommand);
+	wheelUpCommand = GetRCLine(name, "OnWheelUp", defaultSettings->wheelUpCommand);
+	enterCommand = GetRCLine(name, "OnMouseEnter", defaultSettings->enterCommand);
+	leaveCommand = GetRCLine(name, "OnMouseLeave", defaultSettings->leaveCommand);
+	dropCommand = GetRCLine(name, "OnDrop", defaultSettings->dropCommand);
 
-	scrollPadLength = GetRCInt(name, "scrollPadLength", defaultSettings.scrollPadLength);
-	scrollInterval = GetRCInt(name, "scrollInterval", defaultSettings.scrollInterval);
-	scrollSpeed = GetRCInt(name, "scrollSpeed", defaultSettings.scrollSpeed);
-	scroll = GetRCBoolean(name, "scroll", defaultSettings.scroll);
+	scrollPadLength = GetRCInt(name, "scrollPad", defaultSettings->scrollPadLength);
+	scrollInterval = GetRCInt(name, "scrollInterval", defaultSettings->scrollInterval);
+	scrollSpeed = GetRCInt(name, "scrollSpeed", defaultSettings->scrollSpeed);
+	scroll = GetRCBoolean(name, "scroll", defaultSettings->scroll);
 
-	trueTransparency = GetRCBoolean(name, "trueTransparency", defaultSettings.trueTransparency);
+//	trueTransparency = GetRCBoolean(name, "TrueTransparency", defaultSettings->trueTransparency);
 }
 
 LabelSettings::~LabelSettings()
@@ -123,4 +130,4 @@ LabelSettings::~LabelSettings()
 	}
 }
 
-LabelSettings defaultSettings;
+LabelSettings* defaultSettings = NULL;

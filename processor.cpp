@@ -15,12 +15,10 @@ boolean endProcessorStatisticsNT();
 
 boolean startProcessorStatistics()
 {
-	OSVERSIONINFO verInfo;
-	verInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&verInfo);
-
-	if(verInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) isWinNT = true;
-	if(isWinNT && verInfo.dwMajorVersion >= 5) isWin2K = true;
+	if(IsOS(OS_NT))
+		isWinNT = true;
+	if(IsOS(OS_2KXP))
+		isWin2K = true;
 
 	if(isWinNT)
 		return startProcessorStatisticsNT();
@@ -215,11 +213,11 @@ boolean startProcessorStatisticsNT()
 				dwBufferLen = MAX_PATH;
 				PdhLookupPerfNameByIndexP(NULL, PERF_INDEX_PROCESSOR_TIME, szCounterName, &dwBufferLen);
 
-				wsprintf(szFullCounterName, "\\%s(_Total)\\%s", szObjectName, szCounterName);
+				StringCchPrintf(szFullCounterName, MAX_PATH, "\\%s(_Total)\\%s", szObjectName, szCounterName);
 			}
 			else
 			{
-				lstrcpy(szFullCounterName, "\\System\\% Total Processor Time");
+				StringCchCopy(szFullCounterName, MAX_PATH, "\\System\\% Total Processor Time");
 			}
 
 			pdhStatus = PdhAddCounterP(hQuery, szFullCounterName, 0, &hCounter);

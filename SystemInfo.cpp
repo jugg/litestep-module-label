@@ -210,6 +210,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return getIP(arguments, dynamic);
 	else if(name == "itime")
 		return getInternetTime(dynamic);
+	else if(name == "lsvar" && arguments.size() >= 1)
+		return getLSVar(arguments[0], dynamic);
 	else if(name == "mbmcpuusage")
 		return getMBMCPUUsage(arguments, dynamic);
 	else if(name == "mbmfanspeed")
@@ -282,7 +284,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return "3";
 	else if(name == "%")
 		return "4";
-	
+
+	*dynamic = false;
 	return "[?]";
 }
 
@@ -383,7 +386,7 @@ string SystemInfo::getCPU(boolean *dynamic)
 	}
 
 	char buffer[16];
-	sprintf(buffer, "%d%%", getProcessorUsage());
+	StringCchPrintf(buffer, 16, "%d%%", getProcessorUsage());
 
 	if(dynamic) *dynamic = true;
 	return string(buffer);
@@ -421,7 +424,7 @@ string SystemInfo::getInternetTime(boolean *dynamic)
 	int beats = (1000 * seconds) / 86400;
 
 	char output[8];
-	sprintf(output, "@%03d", beats);
+	StringCchPrintf(output, 8, "@%03d", beats);
 	return string(output);
 }
 
@@ -511,6 +514,32 @@ string SystemInfo::getIP(const vector<string> &arguments, boolean *dynamic)
 	return string(inet_ntoa(*((in_addr *) hostInfo->h_addr_list[n])));
 }
 
+string SystemInfo::getLSVar(const string &name, boolean *dynamic)
+{
+	// LSGetVariable pops up an error box if the variable
+	// is undefined; making it useless. I'm just gonna
+	// use VarExpansion for better backwards compatability
+	
+	if(dynamic) *dynamic = true;
+	
+	if(GetRCBool(name.c_str(), TRUE))
+	{
+		TCHAR strVarRef[64];
+		StringCchPrintf(strVarRef, 64, "$%s$", name.c_str());
+		
+		
+		TCHAR strResult[256];
+		VarExpansion(strResult, strVarRef);
+		
+		
+		return string(strResult);
+	}
+	else
+	{
+		return "";
+	}
+}
+
 string SystemInfo::getMemAvailable(const vector<string> &arguments, boolean *dynamic)
 {
 	int units = unitsDefault;
@@ -558,28 +587,21 @@ string SystemInfo::getMemTotal(const vector<string> &arguments, boolean *dynamic
 
 string SystemInfo::getOS(boolean *dynamic)
 {
-	OSVERSIONINFO verInfo;
-	verInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&verInfo);
+	if(IsOS(OS_ME))
+		return "Windows ME";
+	if(IsOS(OS_98))
+		return "Windows 98";
+	if(IsOS(OS_95))
+		return "Windows 95";
 
-	if(verInfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
-	{
-		if(verInfo.dwMinorVersion >= 90)
-			return "Windows ME";
-		else if(verInfo.dwMinorVersion >= 10)
-			return "Windows 98";
-		else
-			return "Windows 95";
-	}
-	else
-	{
-		if(verInfo.dwMajorVersion >= 5 && verInfo.dwMinorVersion >= 1)
-			return "Windows XP";
-		else if(verInfo.dwMajorVersion >= 5)
-			return "Windows 2000";
-		else
-			return "Windows NT";
-	}
+	if(IsOS(OS_XP))
+		return "Windows XP";
+	if(IsOS(OS_2K))
+		return "Windows 2000";
+	if(IsOS(OS_NT4))
+		return "Windows NT4";
+
+	return "unknown OS";
 }
 
 string SystemInfo::getRandomLine(const string &file, boolean *dynamic)
@@ -757,7 +779,7 @@ string SystemInfo::getWinampTime(boolean *dynamic)
 	seconds %= 60;
 
 	char buffer[32];
-	wsprintf(buffer, "%d:%02d", minutes, seconds);
+	StringCchPrintf(buffer, 32, "%d:%02d", minutes, seconds);
 	return string(buffer);
 }
 
@@ -773,7 +795,7 @@ string SystemInfo::getWinampRemainTime(boolean *dynamic)
 	seconds %= 60;
 
 	char buffer[32];
-	wsprintf(buffer, "%d:%02d", minutes, seconds);
+	StringCchPrintf(buffer, 32, "%d:%02d", minutes, seconds);
 	return string(buffer);
 }
 
@@ -789,7 +811,7 @@ string SystemInfo::getWinampTotalTime(boolean *dynamic)
 	seconds %= 60;
 
 	char buffer[32];
-	wsprintf(buffer, "%d:%02d", minutes, seconds);
+	StringCchPrintf(buffer, 32, "%d:%02d", minutes, seconds);
 	return string(buffer);
 }
 
@@ -859,7 +881,7 @@ string SystemInfo::getBattery(boolean *dynamic)
 		sps.BatteryLifePercent = 0;
 
 	char output[8];
-	sprintf(output, "%d%%", sps.BatteryLifePercent);
+	StringCchPrintf(output, 8, "%d%%", sps.BatteryLifePercent);
 	return string(output);
 }
 
@@ -899,7 +921,7 @@ string SystemInfo::getMBMCPUUsage(const vector<string> &arguments, boolean *dyna
 	}
 
 	char output[16];
-	sprintf(output, "%d", value);
+	StringCchPrintf(output, 16, "%d", value);
 	return string(output);
 }
 
@@ -935,7 +957,7 @@ string SystemInfo::getMBMFanSpeed(const vector<string> &arguments, boolean *dyna
 	}
 
 	char output[16];
-	sprintf(output, "%d", value);
+	StringCchPrintf(output, 16, "%d", value);
 	return string(output);
 }
 
@@ -975,7 +997,7 @@ string SystemInfo::getMBMTemperature(const vector<string> &arguments, boolean *d
 	}
 
 	char output[16];
-	sprintf(output, "%.0f", value);
+	StringCchPrintf(output, 16, "%.0f", value);
 
 	return string(output);
 }
@@ -1012,7 +1034,7 @@ string SystemInfo::getMBMVoltage(const vector<string> &arguments, boolean *dynam
 	}
 
 	char output[16];
-	sprintf(output, "%.2f", value);
+	StringCchPrintf(output, 16, "%.2f", value);
 	return string(output);
 }
 
@@ -1172,7 +1194,7 @@ string SystemInfo::formatByteSize(largeInt byteSize, largeInt total, int unit)
 	char buffer[32];
 
 	if(unit == unitsPercent) {
-		sprintf(buffer, "%d", (byteSize * 100) / total);
+		StringCchPrintf(buffer, 32, "%d", (byteSize * 100) / total);
 		return string(buffer);
 	}
 
@@ -1227,13 +1249,13 @@ string SystemInfo::formatByteSize(largeInt byteSize, largeInt total, int unit)
 		remainder = 0;
 
 	if(remainder > 0)
-		wsprintf(buffer, "%d.%02d", (int) quotient, (int) remainder);
+		StringCchPrintf(buffer, 32, "%d.%02d", (int) quotient, (int) remainder);
 	else
-		wsprintf(buffer, "%d", (int) quotient);
+		StringCchPrintf(buffer, 32, "%d", (int) quotient);
 
 	if(addUnits) {
-		strcat(buffer, " ");
-		strcat(buffer, units[i]);
+		StringCchCat(buffer, 32, " ");
+		StringCchCat(buffer, 32, units[i]);
 	}
 
 	return string(buffer);
@@ -1280,7 +1302,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 							case 1:
 							{
 								char temp[8];
-								sprintf(temp, "%d", st.wDay);
+								StringCchPrintf(temp, 8, "%d", st.wDay);
 								output.append(temp);
 								break;
 							}
@@ -1288,7 +1310,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 							case 2:
 							{
 								char temp[8];
-								sprintf(temp, "%02d", st.wDay);
+								StringCchPrintf(temp, 8, "%02d", st.wDay);
 								output.append(temp);
 								break;
 							}
@@ -1328,7 +1350,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 							case 1:
 							{
 								char temp[8];
-								sprintf(temp, "%d", st.wMonth);
+								StringCchPrintf(temp, 8, "%d", st.wMonth);
 								output.append(temp);
 								break;
 							}
@@ -1336,7 +1358,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 							case 2:
 							{
 								char temp[8];
-								sprintf(temp, "%02d", st.wMonth);
+								StringCchPrintf(temp, 8, "%02d", st.wMonth);
 								output.append(temp);
 								break;
 							}
@@ -1374,7 +1396,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 						if(count == 2 || count == 4)
 						{
 							char temp[8];
-							sprintf(temp, "%04d", st.wYear);
+							StringCchPrintf(temp, 8, "%04d", st.wYear);
 							output.append((count == 2) ? temp + 2 : temp);
 						}
 						else
@@ -1391,7 +1413,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 						{
 							char temp[8];
 							int hour = span ? st.wHour : (st.wHour == 0) ? 12 : (st.wHour > 12) ? st.wHour - 12 : st.wHour;
-							sprintf(temp, (count == 1) ? "%d" : "%02d", hour);
+							StringCchPrintf(temp, 8, (count == 1) ? "%d" : "%02d", hour);
 							output.append(temp);
 						}
 						else
@@ -1407,7 +1429,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 						if(count == 1 || count == 2)
 						{
 							char temp[8];
-							sprintf(temp, (count == 1) ? "%d" : "%02d", st.wHour);
+							StringCchPrintf(temp, 8, (count == 1) ? "%d" : "%02d", st.wHour);
 							output.append(temp);
 						}
 						else
@@ -1423,7 +1445,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 						if(count == 1 || count == 2)
 						{
 							char temp[8];
-							sprintf(temp, (count == 1) ? "%d" : "%02d", st.wMinute);
+							StringCchPrintf(temp, 8, (count == 1) ? "%d" : "%02d", st.wMinute);
 							output.append(temp);
 						}
 						else
@@ -1439,7 +1461,7 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 						if(count == 1 || count == 2)
 						{
 							char temp[8];
-							sprintf(temp, (count == 1) ? "%d" : "%02d", st.wSecond);
+							StringCchPrintf(temp, 8, (count == 1) ? "%d" : "%02d", st.wSecond);
 							output.append(temp);
 						}
 						else
