@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.94
+                                Label 1.95
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
                         ilmcuts <ilmcuts@gmx.net>
-                        Last Modified: 05-15-2002
+                        Last Modified: 05-28-2002
 --------------------------------------------------------------------------
 
 Overview
@@ -172,10 +172,11 @@ contain dynamically updated content. If no value is provided then the
 default is 1000 (1 second).
 
 LabelBangCommands "none", "minimal", or "all"
-Controls the number of !bangs Label registers. "none" will register no !bangs
-except for the label-core !bangs !labelcreate, !labeldebug and !labellsboxhook.
-"minimal" will register !LabelShow and !LabelHide, while "all" will register,
-all !bangs. If no value is provided then the default is "all".
+Controls the number of !bangs Label registers. "none" will register no
+!bangs except for the label-core !bangs !labelcreate, !labeldebug and
+!labellsboxhook. "minimal" will register !LabelShow and !LabelHide, while
+"all" will register, all !bangs. If no value is provided then the default
+is "all".
 
 LabelUseFahrenheit
 If this command is present, mbmTemperature (see below) is diplayed in
@@ -187,18 +188,21 @@ into. The default is no value in which case the label is loaded normally.
 See the section below entitled 'Using Labels inside LSBox' for more
 information.
 
-LabelScroll <bool> = false
-Tells weather to scroll or not
+LabelScroll
+If this command is present then the label scrolls its contents.
 
-LabelScrollInterval <int> = 200
-The time after which the text advances
+LabelScrollInterval <numer>
+Sets the scrolling update interval in milliseconds. If no value is
+provided then the default is 200.
 
-LabelScrollSpeed <int> = 1
-The amount of pixels the text moves after each scrollInterval
-(negative values invert the direction)
+LabelScrollSpeed <number>
+Sets the number of pixels to scroll for each update. Negative values allow
+you to scroll in the opposite direction. If no value is provided then the
+default is 1.
 
-LabelScrollPad <int> = 10
-The space between start and end of the text
+LabelScrollPad <number>
+Sets the the number of pixels between the start and end of the text when
+scrolling. If no value is provided then the default is 10.
 
 
 Bang Commands

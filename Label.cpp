@@ -127,39 +127,6 @@ void Label::reconfigure()
 		DeleteObject(tmpObj);
 		DeleteDC(tmpDC);
 	}
-
-	/*
-	int screenX = GetSystemMetrics(SM_CXSCREEN);
-	int screenY = GetSystemMetrics(SM_CYSCREEN);
-
-	setAlwaysOnTop(GetRCBoolean(name, "AlwaysOnTop"));
-	setBackground(GetRCTexture(name, ""));
-	setFont(GetRCFont(name, "Font"));
-	setJustify(GetRCNamedValue(name, "Justify", justifyValues, DT_CENTER));
-	setText(GetRCString(name, "Text", ""));
-	setUpdateInterval(GetRCInt(name, "UpdateInterval", 1000));
-	setLeftBorder(GetRCInt(name, "LeftBorder", 0));
-	setTopBorder(GetRCInt(name, "TopBorder", 0));
-	setRightBorder(GetRCInt(name, "RightBorder", 0));
-	setBottomBorder(GetRCInt(name, "BottomBorder", 0));
-
-	reposition(GetRCCoordinate(name, "X", 0, screenX),
-		GetRCCoordinate(name, "Y", 0, screenY),
-		GetRCDimension(name, "Width", 64, screenX),
-		GetRCDimension(name, "Height", 64, screenY));
-
-	leftClickCommand = GetRCLine(name, "OnLeftClick", "");
-	leftDoubleClickCommand = GetRCLine(name, "OnLeftDoubleClick", "");
-	middleClickCommand = GetRCLine(name, "OnMiddleClick", "");
-	middleDoubleClickCommand = GetRCLine(name, "OnMiddleDoubleClick", "");
-	rightClickCommand = GetRCLine(name, "OnRightClick", "");
-	rightDoubleClickCommand = GetRCLine(name, "OnRightDoubleClick", "");
-	enterCommand = GetRCLine(name, "OnMouseEnter", "");
-	leaveCommand = GetRCLine(name, "OnMouseLeave", "");
-
-	if(!GetRCBoolean(name, "StartHidden"))
-		show();
-	*/
 }
 
 void Label::setAlwaysOnTop(boolean alwaysOnTop)

@@ -254,7 +254,7 @@ StringList ParseNameList(const string &source)
 		string name;
 		i = source.find_first_not_of(" \t", i);
 
-		while(i < length && (isalnum(source[i]) || source[i] == '_'))
+		while(i < length && (isalnum(source[i]) || source[i] == '_' || source[i] == '.'))
 		{
 			name.append(1, source[i]);
 			i++;

@@ -1,4 +1,8 @@
-1.94, 05-15-2002
+1.95, 05-28-2002
+- fixed [cpu] bug in non-English versions of Win2K/XP
+- label names can now contain periods
+
+1.94, 05-15-2002 (Holger Brunn)
 - added LabelScroll
 - added LabelScrollInterval
 - added LabelScrollSpeed
