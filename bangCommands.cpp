@@ -1,6 +1,7 @@
 #include "common.h"
 #include "bangCommands.h"
 #include "Label.h"
+#include "Font.h"
 
 extern HINSTANCE hInstance;
 extern LabelList labelList;
@@ -15,6 +16,7 @@ void MoveBangCommand(HWND caller, const char *bangCommandName, const char *argum
 void PinToDesktopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void RepositionBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ResizeBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void SetFontColorBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void SetTextBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ShowBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ToggleAlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
@@ -30,6 +32,7 @@ struct { const char *name; BangCommandEx *function; } bangCommands[] = {
 	{ "!%sPinToDesktop", PinToDesktopBangCommand },
 	{ "!%sReposition", RepositionBangCommand },
 	{ "!%sResize", ResizeBangCommand },
+	{ "!%sSetFontColor", SetFontColorBangCommand },
 	{ "!%sSetText", SetTextBangCommand },
 	{ "!%sShow", ShowBangCommand },
 	{ "!%sToggleAlwaysOnTop", ToggleAlwaysOnTopBangCommand },
@@ -68,7 +71,7 @@ void CreateLabelBangCommand(HWND caller, const char *arguments)
 {
 	Label *label = new Label(arguments);
 	label->load(hInstance);
-	// labelList.insert(labelList.end(), label);
+	labelList.insert(labelList.end(), label);
 }
 
 // display label debugging info
@@ -79,12 +82,13 @@ void DebugBangCommand(HWND caller, const char *arguments)
 
 	while(it != labelList.end())
 	{
-		string temp = (*it)->getName();
+		Label *label = *it;
+		string temp = label->getName();
 
-		if((*it)->getBox() != 0)
+		if(label->getBox() != 0)
 		{
-			char buffer[64];
-			GetWindowText((*it)->getBox(), buffer, 64);
+			char buffer[80];
+			GetWindowText(label->getBox(), buffer, 80);
 			temp += " " + string(buffer);
 		}
 
@@ -108,7 +112,7 @@ void AlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char
 	if(label != 0) label->setAlwaysOnTop(true);
 }
 
-// make a label always on top
+// destroy a label
 void DestroyBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
 {
 	string labelName = string(bangCommandName);
@@ -116,7 +120,7 @@ void DestroyBangCommand(HWND caller, const char *bangCommandName, const char *ar
 
 	if(label != 0)
 	{
-		// labelList.remove(label);
+		labelList.remove(label);
 		delete label;
 	}
 }
@@ -212,6 +216,39 @@ void ResizeBangCommand(HWND caller, const char *bangCommandName, const char *arg
 	}
 }
 
+static int parseInt(const char *str, int radix = 10);
+
+// set a label's font color
+void SetFontColorBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 13));
+
+	if(label != 0 && arguments != 0)
+	{
+		char red[8];
+		char green[8];
+		char blue[8];
+		char *tokenBuffers[] = { red, green, blue };
+		int color;
+		
+		int numTokens = LCTokenize(arguments, tokenBuffers, 3, 0);
+		
+		if(numTokens >= 3)
+		{
+			color = RGB(parseInt(red), parseInt(green), parseInt(blue));
+		}
+		else
+		{
+			color = parseInt(red, 16);
+			color = MAKELONG(HIWORD(color), LOWORD(color));
+		}
+		
+		label->getFont()->setColor(color);
+		label->repaint();
+	}
+}
+
 // set a label's text
 void SetTextBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
 {
@@ -264,4 +301,32 @@ void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arg
 	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 7));
 
 	if(label != 0) label->update();
+}
+
+// value of digit char
+static int digitValueOf(char ch)
+{
+	if(ch >= 'A' && ch <= 'F') {
+		return (ch - 'A') + 10;
+	}
+	else if(ch >= 'a' && ch <= 'f') {
+		return (ch - 'a') + 10;
+	}
+	else if(ch >= '0' && ch <= '9') {
+		return (ch - '0');
+	}
+	else {
+		return -1;
+	}
+}
+
+// parse an int using given radix
+static int parseInt(const char *str, int radix)
+{
+	int value = 0;
+	
+	while(*str)
+		value = (value * radix) + digitValueOf(*str++);
+	
+	return value;
 }

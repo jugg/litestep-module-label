@@ -11,7 +11,7 @@ public:
 	Label(const string &name);
 	virtual ~Label();
 
-	void load(HINSTANCE hInstance);
+	void load(HINSTANCE hInstance, HWND box = 0);
 	void reconfigure();
 
 	Texture *getBackground() const { return background; }
@@ -40,7 +40,6 @@ public:
 
 	void setAlwaysOnTop(boolean alwaysOnTop);
 	void setBackground(Texture *background);
-	void setBox(HWND box);
 	void setFont(Font *font);
 	void setJustify(int justify);
 	void setText(const string &text);
@@ -109,9 +108,9 @@ private:
 	string enterCommand;
 	string leaveCommand;
 
-	static int instanceCount;
-
 protected:
+
+	void relayMouseMessageToBox(UINT message, WPARAM wParam, LPARAM lParam);
 
 	virtual void onLButtonDblClk(int x, int y);
 	virtual void onLButtonDown(int x, int y);
@@ -132,7 +131,7 @@ protected:
 
 	virtual boolean onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
 
-private:
+public:
 
 	static LRESULT WINAPI windowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

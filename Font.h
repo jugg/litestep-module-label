@@ -8,10 +8,12 @@ public:
 	Font();
 	virtual ~Font();
 
-	void configure(const string &prefix);
+	void configure(const string &prefix, Font *baseFont);
 	void apply(HDC hDC, int x, int y, int width, int height, const string &text, unsigned int flags);
 	void measure(HDC hDC, const string &text, unsigned int flags, int *width, int *height);
-
+	
+	void setColor(int aColor);
+	
 private:
 
 	HFONT hFont;

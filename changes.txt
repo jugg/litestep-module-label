@@ -1,3 +1,10 @@
+1.7, 08-04-2001
+- added !LabelSetFontColor
+- added timezone support to [date] and [time]
+- added [itime]
+- bugfix: fonts now work properly with AllLabels
+- bugfix: crash on recycle (special thanks to Paul Haine)
+
 1.61, 05-28-2001
 - bugfix: LSBox support now actually works! =)
 
@@ -13,7 +20,7 @@
 
 1.51, 04-19-2001
 - bugfix: in [date] and [time] midnight showed up as 0 o'clock
-- bugfix: in [uptime] the hour wrapped as 12
+- bugfix: in [uptime] the hour wrapped at 12
 
 1.5, 04-11-2001
 - added support for dynamic label creation/destruction

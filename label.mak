@@ -42,6 +42,7 @@ ALL : "$(OUTDIR)\label.dll"
 
 CLEAN :
 	-@erase "$(INTDIR)\bangCommands.obj"
+	-@erase "$(INTDIR)\debug.obj"
 	-@erase "$(INTDIR)\DefaultTexture.obj"
 	-@erase "$(INTDIR)\Font.obj"
 	-@erase "$(INTDIR)\ImageTexture.obj"
@@ -70,15 +71,16 @@ DEF_FILE= \
 	".\exports.def"
 LINK32_OBJS= \
 	"$(INTDIR)\bangCommands.obj" \
+	"$(INTDIR)\debug.obj" \
 	"$(INTDIR)\DefaultTexture.obj" \
 	"$(INTDIR)\Font.obj" \
 	"$(INTDIR)\ImageTexture.obj" \
 	"$(INTDIR)\Label.obj" \
+	"$(INTDIR)\LabelSettings.obj" \
 	"$(INTDIR)\main.obj" \
 	"$(INTDIR)\processor.obj" \
 	"$(INTDIR)\SystemInfo.obj" \
-	"$(INTDIR)\utility.obj" \
-	"$(INTDIR)\LabelSettings.obj"
+	"$(INTDIR)\utility.obj"
 
 "$(OUTDIR)\label.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -98,6 +100,7 @@ ALL : "$(OUTDIR)\label.dll"
 
 CLEAN :
 	-@erase "$(INTDIR)\bangCommands.obj"
+	-@erase "$(INTDIR)\debug.obj"
 	-@erase "$(INTDIR)\DefaultTexture.obj"
 	-@erase "$(INTDIR)\Font.obj"
 	-@erase "$(INTDIR)\ImageTexture.obj"
@@ -127,15 +130,16 @@ DEF_FILE= \
 	".\exports.def"
 LINK32_OBJS= \
 	"$(INTDIR)\bangCommands.obj" \
+	"$(INTDIR)\debug.obj" \
 	"$(INTDIR)\DefaultTexture.obj" \
 	"$(INTDIR)\Font.obj" \
 	"$(INTDIR)\ImageTexture.obj" \
 	"$(INTDIR)\Label.obj" \
+	"$(INTDIR)\LabelSettings.obj" \
 	"$(INTDIR)\main.obj" \
 	"$(INTDIR)\processor.obj" \
 	"$(INTDIR)\SystemInfo.obj" \
-	"$(INTDIR)\utility.obj" \
-	"$(INTDIR)\LabelSettings.obj"
+	"$(INTDIR)\utility.obj"
 
 "$(OUTDIR)\label.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -188,6 +192,11 @@ LINK32_OBJS= \
 SOURCE=.\bangCommands.cpp
 
 "$(INTDIR)\bangCommands.obj" : $(SOURCE) "$(INTDIR)"
+
+
+SOURCE=.\debug.cpp
+
+"$(INTDIR)\debug.obj" : $(SOURCE) "$(INTDIR)"
 
 
 SOURCE=.\DefaultTexture.cpp

@@ -12,19 +12,19 @@ Font::~Font()
 		DeleteObject(hFont);
 }
 
-void Font::configure(const string &prefix)
+void Font::configure(const string &prefix, Font *baseFont)
 {
-	shadow = GetRCBoolean(prefix, "FontShadow");
-	shadowColor = GetRCColor(prefix, "FontShadowColor", RGB(0, 0, 0));
-	shadowX = GetRCInt(prefix, "FontShadowX", 1);
-	shadowY = GetRCInt(prefix, "FontShadowY", 1);
+	shadow = GetRCBoolean(prefix, "FontShadow", baseFont ? baseFont->shadow : false);
+	shadowColor = GetRCColor(prefix, "FontShadowColor", baseFont ? baseFont->shadowColor : RGB(0, 0, 0));
+	shadowX = GetRCInt(prefix, "FontShadowX", baseFont ? baseFont->shadowX : 1);
+	shadowY = GetRCInt(prefix, "FontShadowY", baseFont ? baseFont->shadowY : 1);
 
-	name = GetRCString(prefix, "Font", "Arial");
-	height = GetRCInt(prefix, "FontHeight", 15, 0);
-	color = GetRCColor(prefix, "FontColor", shadow ? RGB(255, 255, 255) : RGB(0, 0, 0));
+	name = GetRCString(prefix, "Font", baseFont ? baseFont->name : "Arial");
+	height = GetRCInt(prefix, "FontHeight", baseFont ? baseFont->height : 15, 0);
+	color = GetRCColor(prefix, "FontColor", baseFont ? baseFont->color : (shadow ? RGB(255, 255, 255) : RGB(0, 0, 0)));
 
-	bold = GetRCBoolean(prefix, "FontBold");
-	italic = GetRCBoolean(prefix, "FontItalic");
+	bold = GetRCBoolean(prefix, "FontBold", baseFont ? baseFont->bold : false);
+	italic = GetRCBoolean(prefix, "FontItalic", baseFont ? baseFont->italic : false);
 }
 
 void Font::apply(HDC hDC, int x, int y, int width, int height, const string &text, unsigned int flags)
@@ -72,6 +72,11 @@ void Font::apply(HDC hDC, int x, int y, int width, int height, const string &tex
 void Font::measure(HDC hDC, const string &text, unsigned int flags, int *width, int *height)
 {
 	// ...
+}
+
+void Font::setColor(int aColor)
+{
+	color = aColor;
 }
 
 void Font::createHandle()

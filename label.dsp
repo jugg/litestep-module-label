@@ -98,6 +98,10 @@ SOURCE=.\bangCommands.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\debug.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DefaultTexture.cpp
 # End Source File
 # Begin Source File
@@ -154,6 +158,10 @@ SOURCE=.\common.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\debug.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\DefaultTexture.h
 # End Source File
 # Begin Source File
@@ -188,6 +196,10 @@ SOURCE=.\Texture.h
 
 SOURCE=.\utility.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\verInfo.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
@@ -203,6 +215,10 @@ SOURCE=.\changes.txt
 # Begin Source File
 
 SOURCE=.\readme.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\requests.txt
 # End Source File
 # End Group
 # End Target

@@ -186,6 +186,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return getHostName(dynamic);
 	else if(name == "ip")
 		return getIP(dynamic);
+	else if(name == "itime")
+		return getInternetTime(dynamic);
 	else if(name == "memavailable")
 		return getMemAvailable(dynamic);
 	else if(name == "meminuse")
@@ -342,18 +344,36 @@ string SystemInfo::getDate(const vector<string> &arguments, boolean *dynamic)
 {
 	if(dynamic) *dynamic = true;
 
+	SYSTEMTIME st;
+	getLocalizedTime(&st, arguments.size() >= 2 ? arguments[1] : "");
+
 	if(arguments.size() >= 1)
 	{
-		SYSTEMTIME st;
-		GetLocalTime(&st);
+		// SYSTEMTIME st;
+		// GetLocalTime(&st);
 		return formatDateTime(arguments[0], st, 0);
 	}
 	else
 	{
 		char buffer[64];
-		GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, 0, 0, buffer, 64);
+		GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, 0, buffer, 64);
 		return string(buffer);
 	}
+}
+
+string SystemInfo::getInternetTime(boolean *dynamic)
+{
+	if(dynamic) *dynamic = true;
+
+	SYSTEMTIME st;
+	GetSystemTime(&st);
+
+	int seconds = (((st.wHour + 1) * 60) + st.wMinute) * 60 + st.wSecond;
+	int beats = (1000 * seconds) / 86400;
+
+	char output[8];
+	sprintf(output, "@%03d", beats);
+	return string(output);
 }
 
 string SystemInfo::getDiskAvailable(const string &drive, boolean *dynamic)
@@ -460,7 +480,9 @@ string SystemInfo::getOS(boolean *dynamic)
 	}
 	else
 	{
-		if(verInfo.dwMajorVersion >= 5)
+		if(verInfo.dwMajorVersion >= 5 && verInfo.dwMinorVersion >= 1)
+			return "Windows XP";
+		else if(verInfo.dwMajorVersion >= 5)
 			return "Windows 2000";
 		else
 			return "Windows NT";
@@ -544,16 +566,19 @@ string SystemInfo::getTime(const vector<string> &arguments, boolean *dynamic)
 {
 	if(dynamic) *dynamic = true;
 
+	SYSTEMTIME st;
+	getLocalizedTime(&st, arguments.size() >= 2 ? arguments[1] : "");
+
 	if(arguments.size() >= 1)
 	{
-		SYSTEMTIME st;
-		GetLocalTime(&st);
+		// SYSTEMTIME st;
+		// GetLocalTime(&st);
 		return formatDateTime(arguments[0], st, 0);
 	}
 	else
 	{
 		char buffer[64];
-		GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, 0, 0, buffer, 64);
+		GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, 0, buffer, 64);
 		return string(buffer);
 	}
 }
@@ -1129,6 +1154,64 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, in
 	}
 	
 	return output;
+}
+
+void SystemInfo::getLocalizedTime(SYSTEMTIME *pst, const string &timezone)
+{
+	string temp = lowerCase(timezone);
+	const char *s = temp.c_str();
+
+	if(s[0] == 'u' && s[1] == 't' && s[2] == 'c')
+	{
+		s = s + 3;
+		GetSystemTime(pst);
+	}
+	else
+	{
+		GetLocalTime(pst);
+	}
+
+	while(s[0] == ' ')
+		s++;
+
+	int dHour = 0;
+	int dMinute = 0;
+	int sign = 1;
+
+	if(s[0] == '+')
+	{
+		sign = 1;
+		s++;
+	}
+	else if(s[0] == '-')
+	{
+		sign = -1;
+		s++;
+	}
+
+	while(s[0] >= '0' && s[0] <= '9')
+	{
+		dHour = (dHour * 10) + (s[0] - '0');
+		s++;
+	}
+
+	if(s[0] == ':')
+	{
+		s++;
+
+		while(s[0] >= '0' && s[0] <= '9')
+		{
+			dMinute = (dMinute * 10) + (s[0] - '0');
+			s++;
+		}
+	}
+
+	largeInt base;
+	largeInt delta = (largeInt) (sign * ((dHour * 60) + dMinute)) * 600000000;
+
+	SystemTimeToFileTime(pst, (LPFILETIME) &base);
+	base = base + delta;
+	FileTimeToSystemTime((LPFILETIME) &base, pst);
 }
 
 char *SystemInfo::getLocaleInfo(LCTYPE type)

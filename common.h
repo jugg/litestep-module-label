@@ -24,13 +24,14 @@ typedef __int64 largeInt;
 #define STRICT
 
 #include <windows.h>
+#include <windowsx.h>
 #include <winsock.h>
 #include "lsapi.h"
 #include "wharfdata.h"
 #include "utility.h"
+#include "verInfo.h"
+#include "debug.h"
 
 #define LM_SETLABELTEXT 9600
-
-typedef map<HINSTANCE, HWND> InstanceMap;
 
 #endif

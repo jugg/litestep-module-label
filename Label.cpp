@@ -1,10 +1,10 @@
 #include "common.h"
 #include "bangCommands.h"
+#include "LabelSettings.h"
 #include "Font.h"
 #include "Label.h"
 #include "SystemInfo.h"
 #include "Texture.h"
-#include "LabelSettings.h"
 
 #define TIMER_MOUSETRACK 1
 #define TIMER_UPDATE 2
@@ -32,27 +32,15 @@ Label::Label(const string &name)
 	background = 0;
 	font = 0;
 
-	labelList.insert(labelList.end(), this);
 	AddBangCommands(name);
-
-	/* char d[64];
-	wsprintf(d, "Label %s created", name.c_str());
-	MessageBox(0, d, "Label", MB_SETFOREGROUND); */
 }
 
 Label::~Label()
 {
-	labelList.remove(this);
 	RemoveBangCommands(name);
 
 	if(hWnd != 0)
-	{
-		SetWindowLong(hWnd, 0, 0);
 		DestroyWindow(hWnd);
-	}
-
-	if(--instanceCount == 0)
-		UnregisterClass("LabelLS", hInstance);
 
 	if(backgroundBitmap != 0)
 	{
@@ -70,15 +58,13 @@ Label::~Label()
 
 	if(background != defaultSettings.skin) delete background;
 	if(font != defaultSettings.font) delete font;
-
-	/* char d[64];
-	wsprintf(d, "Label %s destroyed", name.c_str());
-	MessageBox(0, d, "Label", MB_SETFOREGROUND); */
 }
 
-void Label::load(HINSTANCE hInstance)
+void Label::load(HINSTANCE hInstance, HWND box)
 {
 	this->hInstance = hInstance;
+	this->box = box;
+
 	reconfigure();
 }
 
@@ -165,26 +151,18 @@ void Label::setAlwaysOnTop(boolean alwaysOnTop)
 
 void Label::setBackground(Texture *background)
 {
-	delete this->background;
+	if(this->background != defaultSettings.skin)
+		delete this->background;
+
 	this->background = background;
 	repaint(true);
 }
 
-void Label::setBox(HWND box)
-{
-	/* char b[64];
-	GetWindowText(box, b, 64);
-
-	char d[64];
-	wsprintf(d, "Label %s loaded into box %s", name.c_str(), b);
-	MessageBox(0, d, "Label", MB_SETFOREGROUND); */
-
-	this->box = box;
-}
-
 void Label::setFont(Font *font)
 {
-	delete this->font;
+	if(this->font != defaultSettings.font)
+		delete this->font;
+
 	this->font = font;
 	repaint();
 }
@@ -309,33 +287,13 @@ void Label::show()
 {
 	if(hWnd == 0)
 	{
-		if(++instanceCount == 1)
-		{
-			WNDCLASSEX wc;
-
-			wc.cbSize = sizeof(WNDCLASSEX);
-			wc.style = CS_GLOBALCLASS | CS_DBLCLKS;
-			wc.lpfnWndProc = Label::windowProcedure;
-			wc.cbClsExtra = 0;
-			wc.cbWndExtra = sizeof(Label *);
-			wc.hInstance = hInstance;
-			wc.hbrBackground = 0;
-			wc.hCursor = LoadCursor(0, IDC_ARROW);
-			wc.hIcon = 0;
-			wc.lpszMenuName = 0;
-			wc.lpszClassName = "LabelLS";
-			wc.hIconSm = 0;
-
-			RegisterClassEx(&wc);
-		}
-
 		hWnd = CreateWindowEx(box ? 0 : WS_EX_TOOLWINDOW,
 			"LabelLS",
 			name.c_str(),
 			box ? WS_CHILD : WS_POPUP,
 			x, y,
 			width, height,
-			box,
+			box ? box : GetLitestepWnd(),
 			0,
 			hInstance,
 			this);
@@ -353,6 +311,16 @@ void Label::update()
 {
 	text = systemInfo->processLabelText(originalText, this);
 	repaint();
+}
+
+void Label::relayMouseMessageToBox(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	POINT pt;
+	pt.x = GET_X_LPARAM(lParam);
+	pt.y = GET_Y_LPARAM(lParam);
+
+	MapWindowPoints(hWnd, box, &pt, 1);
+	PostMessage(box, message, wParam, MAKELPARAM((short) pt.x, (short) pt.y));
 }
 
 void Label::onLButtonDblClk(int x, int y)
@@ -615,11 +583,24 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 			return true;
 		}
 
+		case WM_DESTROY:
+		{
+			if(box)
+			{
+				SetWindowLong(hWnd, 0, 0);
+				hWnd = 0;
+				labelList.remove(this);
+				delete this;
+			}
+
+			return false;
+		}
+
 		case WM_LBUTTONDBLCLK:
 		{
 			if(leftDoubleClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -631,7 +612,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(leftDoubleClickCommand.empty() && leftClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -643,7 +624,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(leftDoubleClickCommand.empty() && leftClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -655,7 +636,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(middleDoubleClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -667,7 +648,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(middleDoubleClickCommand.empty() && middleClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -679,7 +660,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(middleDoubleClickCommand.empty() && middleClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -691,7 +672,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(rightDoubleClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -703,7 +684,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(rightDoubleClickCommand.empty() && rightClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -715,7 +696,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(rightDoubleClickCommand.empty() && rightClickCommand.empty())
 			{
-				PostMessage(box, message, wParam, lParam);
+				relayMouseMessageToBox(message, wParam, lParam);
 				return true;
 			}
 
@@ -749,7 +730,7 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 
 		case WM_SIZE:
 		{
-			onSize((int) (short) LOWORD(lParam), (int) (short) HIWORD(height));
+			onSize((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
@@ -782,23 +763,11 @@ LRESULT Label::windowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 	if(label)
 	{
-		if(message == WM_DESTROY)
-		{
-			label->hWnd = 0;
-			SetWindowLong(hWnd, 0, 0);
-			// labelList.remove(label);
-			delete label;
-		}
-		else
-		{
-			LRESULT lResult = 0;
+		LRESULT lResult = 0;
 
-			if(label->onWindowMessage(message, wParam, lParam, lResult))
-				return lResult;
-		}
+		if(label->onWindowMessage(message, wParam, lParam, lResult))
+			return lResult;
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
-
-int Label::instanceCount = 0;

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
-                                Label 1.61
+                                Label 1.7
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
-                        Last Modified: 05-28-2001
+                        Last Modified: 08-04-2001
 --------------------------------------------------------------------------
 
 Overview
@@ -117,7 +117,7 @@ If this command is present then the font will be italic.
 
 LabelFontColor <color>
 Sets the color of the font used to display the text. If no value is
-provided then the default dpends on whether shadowing is enabled. If it is
+provided then the default depends on whether shadowing is enabled. If it is
 enabled then the default is white (the shadow color defaults to black),
 otherwise the default is black.
 
@@ -197,6 +197,10 @@ Repositions (moves and resizes) the label.
 !LabelResize <width> <height>
 Resizes the label.
 
+!LabelSetFontColor <color>
+Changes the label's font color. You can specify the color as decimal
+RGB (128 64 255) or as hexadecimal (8040FF).
+
 !LabelSetText [<text>]
 Sets the text displayed in the label. If the parameter is not present then
 the label will be cleared of any text.
@@ -258,7 +262,7 @@ Multiple Labels
 ---------------
 
 Label.dll takes a new approach to configuring multiple instances.
-Traditionally a module that supported multiple instance had to use
+Traditionally a module that supported multiple instances had to use
 *Config-style configuration where all the settings for each instance had
 to fit on a single line (like shortcut.dll). But labels have too many
 settings to put on a single line so that approach was out of the question.
@@ -478,13 +482,25 @@ yy			2-digit year
 yyyy		4-digit year
 h			hour (1-12)
 hh			hour with leading zero (01-12)
+i			hour (0-23)
+ii			hour with leading zero (00-23)
 n			minute (0-59)
 nn			minute with leading zero (00-59)
 s			second (0-59)
 ss			second with leading zero (00-59)
 am/pm		am/pm indicator
 
-For [uptime] only the day, hour, minute, and second values are valid.
+For [uptime] only the day, hour, minute, and second values are valid. The
+[date] and [time] data sources can also take a second parameter that
+modifies the timezone used. Here are some examples:
+
+[time('h:nn am/pm', '+4')]
+[time('h:nn am/pm', '-2:30')]
+[time('h:nn am/pm', 'UTC')]
+[time('h:nn am/pm', 'UTC+1')]
+
+UTC means coordinated universal time and is loosely defined as the current
+date and time in Greenwich, England.
 
 
 Default Configurations using AllLabels
@@ -522,9 +538,9 @@ LabelThreeFontColor 255 255 255
 Using Labels inside LSBox
 -------------------------
 
-As of version 1.6, label.dll is compatible with BlkHawk's LSBox module for
-Litestep. BlkHawk also released a modification of label for use with LSBox
-and my code is based on his, however my code adds the LabelLSBoxName
+As of version 1.61, label.dll is compatible with BlkHawk's LSBox module
+for Litestep. BlkHawk also released a modification of label for use with
+LSBox and my code is based on his, however my code adds the LabelLSBoxName
 setting (which is required if the label is to be loaded into a box). This
 way you can have labels in multiple boxes as well as outside of boxes.
 

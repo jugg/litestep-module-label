@@ -224,6 +224,11 @@ int GetRCDimension(const string &prefix, const string &baseName, int defaultVal,
 // retrieve a font from step.rc
 Font *GetRCFont(const string &object, const string &subKey, Font *defaultVal)
 {
+	Font *font = new Font;
+	font->configure(object, defaultVal);
+	return font;
+	
+	/*
 	if(GetRCBoolean(object, subKey + "Font") || !defaultVal)
 	{
 		Font *font = new Font();
@@ -234,6 +239,7 @@ Font *GetRCFont(const string &object, const string &subKey, Font *defaultVal)
 	{
 		return defaultVal;
 	}
+	*/
 }
 
 // parse a string into a list of names
@@ -432,7 +438,7 @@ Texture *GetRCTexture(const string &object, const string &subKey, Texture *defau
 {
 	Texture *texture;
 
-	if(GetRCBoolean(object, subKey + "Image"))
+	if(GetRCString(object, subKey + "Image", ".none") != ".none")
 	{
 		texture = new ImageTexture();
 		texture->configure(object, subKey);

@@ -6,6 +6,7 @@
 HINSTANCE hInstance;
 HWND messageHandler;
 LabelList labelList;
+boolean initialized = false;
 
 #define LM_UPDATEBG (WM_USER + 1)
 
@@ -15,49 +16,23 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			strcpy((char *) lParam, "Label 1.61 (Maduin)");
-			return strlen((char *) lParam);
+			char revID[80];
+			wsprintf(revID, "%s %s (%s)", V_NAME, V_VERSION, V_AUTHOR);
+			strcpy((char *) lParam, revID);
+			return strlen(revID);
 		}
-
-		/* case LM_REFRESH:
-		{
-			StringList labelNames = GetRCNameList("Labels", "", "Label");
-
-			for(LabelListIterator itA = labelList.begin(); itA != labelList.end(); itA++)
-			{
-				for(StringListIterator itB = labelNames.begin(); itB != labelNames.end(); itB++)
-				{
-					if(stricmp((*itA)->getName().c_str(), itB->c_str()) == 0)
-					{
-						(*itA)->reconfigure();
-						labelNames.erase(itB);
-						break;
-					}
-				}
-
-				if(itB == labelNames.end())
-				{
-					delete *itA;
-					labelList.erase(itA);
-				}
-			}
-
-			for(StringListIterator itC = labelNames.begin(); itC != labelNames.end(); itC++)
-			{
-				Label *label = new Label(*itC);
-				label->load((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE));
-				labelList.insert(labelList.end(), label);
-			}
-
-			return 0;
-		} */
 
 		case LM_UPDATEBG:
 		{
 			PaintDesktopEx(0, 0, 0, 0, 0, 0, 0, TRUE);
 
 			for(LabelListIterator i = labelList.begin(); i != labelList.end(); i++)
-				(*i)->repaint(true);
+			{
+				Label *label = *i;
+
+				if(label->getBox() == 0)
+					label->repaint(true);
+			}
 
 			return 0;
 		}
@@ -81,6 +56,21 @@ int lsMessages[] = {
 int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 {
 	WNDCLASSEX wc;
+
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.style = CS_GLOBALCLASS | CS_DBLCLKS;
+	wc.lpfnWndProc = Label::windowProcedure;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = sizeof(Label *);
+	wc.hInstance = hInstance;
+	wc.hbrBackground = 0;
+	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hIcon = 0;
+	wc.lpszMenuName = 0;
+	wc.lpszClassName = "LabelLS";
+	wc.hIconSm = 0;
+
+	RegisterClassEx(&wc);
 
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_GLOBALCLASS;
@@ -113,27 +103,38 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 	::hInstance = hInstance;
 	systemInfo = new SystemInfo();
 
-	StringList labelNames = GetRCNameList("", "Labels");
+	StringList labelNames = GetRCNameList("Labels", "");
 	if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
+
+	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
+	{
+		if(GetRCBoolean(*it, "LSBoxName"))
+			continue;
+
+		Label *label = new Label(*it);
+		label->load(hInstance);
+		labelList.insert(labelList.end(), label);
+	}
 
 	AddBangCommand("!LabelCreate", CreateLabelBangCommand);
 	AddBangCommand("!LabelDebug", DebugBangCommand);
 
-	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
-	{
-		if(!GetRCBoolean(*it, "LSBoxName"))
-		{
-			Label *label = new Label(*it);
-			label->load(hInstance);
-			// labelList.insert(labelList.end(), label);
-		}
-	}
-
+	initialized = true;
 	return 0;
 }
 
 int initWharfModule(HWND hParent, HINSTANCE hInstance, void *pv)
 {
+	if(!initialized)
+	{
+		MessageBox(hParent,
+			"Label.dll must be loaded as a LoadModule before being loaded by Lsbox.dll",
+			"Label",
+			MB_SETFOREGROUND);
+
+		return 1;
+	}
+
 	if(pv == 0)
 	{
 		// loaded as LSBox *Module, hParent is the main box window
@@ -150,9 +151,8 @@ int initWharfModule(HWND hParent, HINSTANCE hInstance, void *pv)
 			if(stricmp(boxName, dockToBox.c_str()) == 0)
 			{
 				Label *label = new Label(*it);
-				label->setBox(hParent);
-				label->load(hInstance);
-				// labelList.insert(labelList.end(), label);
+				label->load(hInstance, hParent);
+				labelList.insert(labelList.end(), label);
 			}
 		}
 
@@ -174,11 +174,12 @@ extern HBITMAP hbmDesktop;
 
 void quitModule(HINSTANCE hInstance)
 {
-	while(!labelList.empty())
-		delete *(labelList.begin());
-
 	RemoveBangCommand("!LabelCreate");
-	RemoveBangCommand("!LabelDebug");
+
+	for(LabelListIterator it = labelList.begin(); it != labelList.end(); it++)
+		delete *it;
+
+	labelList.clear();
 
 	SendMessage(GetLitestepWnd(),
 		LM_UNREGISTERMESSAGE,
@@ -186,6 +187,8 @@ void quitModule(HINSTANCE hInstance)
 		(LPARAM) lsMessages);
 
 	DestroyWindow(messageHandler);
+
+	UnregisterClass("LabelLS", hInstance);
 	UnregisterClass("LabelMessageHandlerLS", hInstance);
 
 	delete systemInfo;
@@ -193,6 +196,8 @@ void quitModule(HINSTANCE hInstance)
 	hbmDesktop = (HBITMAP) SelectObject(hdcDesktop, hbmDesktop);
 	DeleteDC(hdcDesktop);
 	DeleteObject(hbmDesktop);
+
+	initialized = false;
 }
 
 void quitWharfModule(HINSTANCE hInstance)
@@ -209,4 +214,18 @@ Label *lookupLabel(const string &name)
 	}
 
 	return 0;
+}
+
+BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID pvReserved)
+{
+	if(dwReason == DLL_PROCESS_ATTACH)
+	{
+		/* TCHAR debugFile[MAX_PATH];
+		GetRCString("LabelDebugFile", debugFile, "", MAX_PATH);
+		DebugSetFileName(debugFile); */
+
+		DisableThreadLibraryCalls(hInstance);
+	}
+
+	return TRUE;
 }
