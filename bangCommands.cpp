@@ -25,6 +25,8 @@ void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arg
 void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ScrollBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void RefreshBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void PreviousBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void NextBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 
 bangcmddef MinimalBangs[] = {
 	{ "!%sHide", HideBangCommand },
@@ -44,6 +46,8 @@ bangcmddef FullBangs[] = {
 	{ "!%sUpdate", UpdateBangCommand },
 	{ "!%sClipboard", ClipboardBangCommand },
 	{ "!%sScroll", ScrollBangCommand },
+	{ "!%sPrevious", PreviousBangCommand },
+	{ "!%sNext", NextBangCommand },
 	{ NULL, NULL }
 };
 
@@ -462,6 +466,20 @@ void RefreshBangCommand(HWND caller, const char *bangCommandName, const char *ar
 	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 8));
 	
 	if(label != 0) label->reconfigure();
+}
+
+void PreviousBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 9));
+	if(label != 0) label->previous();
+}
+
+void NextBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 5));
+	if(label != 0) label->next();
 }
 
 // value of digit char

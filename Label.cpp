@@ -40,6 +40,9 @@ Label::Label(const string &name)
 
 	background = 0;
 	font = 0;
+
+	originalText.push_back("");
+	current = 0;
 }
 
 Label::~Label()
@@ -298,21 +301,9 @@ void Label::setJustify(int justify)
 
 void Label::setText(const string &text)
 {
-	if ((this->text).compare(text) == 0)
-		return;
-
-	this->originalText = text;
-	this->text = systemInfo->processLabelText(text, this, &dynamicText);
-
-	if(hWnd)
-	{
-		if(dynamicText)
-			SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
-		else
-			KillTimer(hWnd, TIMER_UPDATE);
-	}
-
-	repaint();
+	originalText = split(text, ";");
+	current = 0;
+	update();
 }
 
 void Label::setLeftBorder(int leftBorder)
@@ -428,9 +419,32 @@ void Label::show()
 	}
 }
 
+void Label::previous()
+{
+	current--;
+	if(current < 0) current = originalText.size() - 1;
+	update();
+}
+
+void Label::next()
+{
+	current++;
+	if(current >= originalText.size()) current = 0;
+	update();
+}
+
 void Label::update()
 {
-	text = systemInfo->processLabelText(originalText, this);
+	text = systemInfo->processLabelText(originalText[current], this, &dynamicText);
+
+	if(hWnd)
+	{
+		if(dynamicText)
+			SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
+		else
+			KillTimer(hWnd, TIMER_UPDATE);
+	}
+
 	repaint();
 }
 

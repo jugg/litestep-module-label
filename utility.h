@@ -60,4 +60,6 @@ void MultiBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdc
 
 LPTSTR RegQueryStringValue(HKEY hKey, LPCTSTR pszSubKey, LPCTSTR pszValueName, LPTSTR pszBuffer, int nBufferSize, LPTSTR pszDefaultValue);
 
+vector<string> split(string str, string sep);
+
 #endif

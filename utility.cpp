@@ -964,3 +964,20 @@ LPTSTR RegQueryStringValue(HKEY hKey, LPCTSTR pszSubKey, LPCTSTR pszValueName, L
 	
 	return pszBuffer;
 }
+
+vector<string> split(string str, string sep)
+{
+	vector<string> substrs;
+	int start = 0;
+	int end = str.find(sep, start);
+	
+	while(end != string::npos)
+	{
+		substrs.push_back(str.substr(start, end - start - sep.length() + 1));
+		start = end + sep.length();
+		end = str.find(sep, start);
+	}
+	
+	substrs.push_back(str.substr(start));
+	return substrs;
+}

@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.98
+                                Label 1.99
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
                         ilmcuts <ilmcuts@gmx.net>
-                        Last Modified: 12-09-2002
+                        Last Modified: 02-20-2003
 --------------------------------------------------------------------------
 
 Overview
@@ -41,6 +41,8 @@ Sets the text displayed by the label. If no value is provided the label is
 left blank. The value can contain both simple text and escape sequences.
 Escape sequences are enclosed in square brackets ("Simple text [escape]").
 See the discussion of text escape sequences below for more information.
+You can assign multiple text items by separating them with semicolons
+("Item 1;Item 2") then switch between them with !LabelPrevious and !LabelNext.
 
 LabelX <number>
 Sets the horizontal position of the label in pixels. If the value is
@@ -269,6 +271,12 @@ scroll" and then stop.
 
 !LabelRefresh
 Call this after !reload to reconfigure the label
+
+!LabelPrevious
+Switch to the previous text.
+
+!LabelNext
+Switch to the next text.
 
 
 Events

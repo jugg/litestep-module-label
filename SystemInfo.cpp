@@ -338,6 +338,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return "3";
 	else if(name == "%")
 		return "4";
+	else if(name == "semicolon") // hack to avoid escaping ;'s
+		return ";";
 
 	*dynamic = false;
 	return "[?]";

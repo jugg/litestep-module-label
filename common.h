@@ -26,7 +26,8 @@ typedef unsigned __int64 largeInt;
 #include <windows.h>
 #include <windowsx.h>
 #include <winsock.h>
-#include "../ls-b247/lsapi/lsapi.h"
+// #include "../ls-b247/lsapi/lsapi.h"
+#include "lsapi.h"
 
 // we want to use our own versions instead of the Indie LS ones
 #undef GetRCCoordinate

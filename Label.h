@@ -64,6 +64,8 @@ public:
 	void hide();
 	void show();
 
+	void previous();
+	void next();
 	void update();
 
 private:
@@ -112,7 +114,8 @@ private:
 	string name;
 
 	boolean dynamicText;
-	string originalText;
+	vector<string> originalText;
+	int current;
 	string text;
 
 	boolean mousePressed;
