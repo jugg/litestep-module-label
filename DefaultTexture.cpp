@@ -1,7 +1,7 @@
 #include "common.h"
 #include "DefaultTexture.h"
 
-void DefaultTexture::configure(const string &prefix)
+void DefaultTexture::configure(const string &prefix, const string &subKey)
 {
 	// ...
 }

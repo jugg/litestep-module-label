@@ -4,9 +4,12 @@
 #include "Label.h"
 #include "SystemInfo.h"
 #include "Texture.h"
+#include "LabelSettings.h"
 
 #define TIMER_MOUSETRACK 1
 #define TIMER_UPDATE 2
+
+extern LabelList labelList;
 
 Label::Label(const string &name)
 {
@@ -17,6 +20,8 @@ Label::Label(const string &name)
 
 	hWnd = 0;
 	hInstance = 0;
+	box = 0;
+
 	visible = false;
 
 	backgroundDC = 0;
@@ -27,15 +32,24 @@ Label::Label(const string &name)
 	background = 0;
 	font = 0;
 
+	labelList.insert(labelList.end(), this);
 	AddBangCommands(name);
+
+	/* char d[64];
+	wsprintf(d, "Label %s created", name.c_str());
+	MessageBox(0, d, "Label", MB_SETFOREGROUND); */
 }
 
 Label::~Label()
 {
+	labelList.remove(this);
 	RemoveBangCommands(name);
 
 	if(hWnd != 0)
+	{
+		SetWindowLong(hWnd, 0, 0);
 		DestroyWindow(hWnd);
+	}
 
 	if(--instanceCount == 0)
 		UnregisterClass("LabelLS", hInstance);
@@ -54,8 +68,12 @@ Label::~Label()
 		DeleteObject(bufferBitmap);
 	}
 
-	delete background;
-	delete font;
+	if(background != defaultSettings.skin) delete background;
+	if(font != defaultSettings.font) delete font;
+
+	/* char d[64];
+	wsprintf(d, "Label %s destroyed", name.c_str());
+	MessageBox(0, d, "Label", MB_SETFOREGROUND); */
 }
 
 void Label::load(HINSTANCE hInstance)
@@ -64,15 +82,38 @@ void Label::load(HINSTANCE hInstance)
 	reconfigure();
 }
 
-NameValuePair justifyValues[] = {
-	{ "left", DT_LEFT },
-	{ "center", DT_CENTER },
-	{ "right", DT_RIGHT },
-	{ 0, 0 }
-};
-
 void Label::reconfigure()
 {
+	LabelSettings settings(name.c_str());
+
+	setAlwaysOnTop(settings.alwaysOnTop);
+	reposition(settings.x, settings.y, settings.width, settings.height);
+
+	setBackground(settings.skin);
+	setFont(settings.font);
+	setJustify(settings.justify);
+	setText(settings.text);
+
+	setUpdateInterval(settings.updateInterval);
+
+	setLeftBorder(settings.leftBorder);
+	setTopBorder(settings.topBorder);
+	setRightBorder(settings.rightBorder);
+	setBottomBorder(settings.bottomBorder);
+
+	leftClickCommand = settings.leftClickCommand;
+	leftDoubleClickCommand = settings.leftDoubleClickCommand;
+	middleClickCommand = settings.middleClickCommand;
+	middleDoubleClickCommand = settings.middleDoubleClickCommand;
+	rightClickCommand = settings.rightClickCommand;
+	rightDoubleClickCommand = settings.rightDoubleClickCommand;
+	enterCommand = settings.enterCommand;
+	leaveCommand = settings.leaveCommand;
+
+	if(!settings.startHidden)
+		show();
+
+	/*
 	int screenX = GetSystemMetrics(SM_CXSCREEN);
 	int screenY = GetSystemMetrics(SM_CYSCREEN);
 
@@ -103,13 +144,14 @@ void Label::reconfigure()
 
 	if(!GetRCBoolean(name, "StartHidden"))
 		show();
+	*/
 }
 
 void Label::setAlwaysOnTop(boolean alwaysOnTop)
 {
 	this->alwaysOnTop = alwaysOnTop;
 
-	if(hWnd != 0)
+	if(hWnd != 0 && box == 0)
 	{
 		ModifyStyle(hWnd, WS_POPUP, WS_CHILD);
 		SetParent(hWnd, alwaysOnTop ? 0 : GetLitestepDesktop());
@@ -126,6 +168,18 @@ void Label::setBackground(Texture *background)
 	delete this->background;
 	this->background = background;
 	repaint(true);
+}
+
+void Label::setBox(HWND box)
+{
+	/* char b[64];
+	GetWindowText(box, b, 64);
+
+	char d[64];
+	wsprintf(d, "Label %s loaded into box %s", name.c_str(), b);
+	MessageBox(0, d, "Label", MB_SETFOREGROUND); */
+
+	this->box = box;
 }
 
 void Label::setFont(Font *font)
@@ -275,13 +329,13 @@ void Label::show()
 			RegisterClassEx(&wc);
 		}
 
-		hWnd = CreateWindowEx(WS_EX_TOOLWINDOW,
+		hWnd = CreateWindowEx(box ? 0 : WS_EX_TOOLWINDOW,
 			"LabelLS",
-			0,
-			WS_POPUP,
+			name.c_str(),
+			box ? WS_CHILD : WS_POPUP,
 			x, y,
 			width, height,
-			0,
+			box,
 			0,
 			hInstance,
 			this);
@@ -442,10 +496,18 @@ void Label::onPaint(HDC hDC)
 
 		if(background->isTransparent())
 		{
-			// paint desktop on display DC and then into background buffer
-			PaintDesktopEx(backgroundDC, 0, 0, width, height, r.left, r.top, FALSE);
-			// PaintDesktop(hDC);
-			// BitBlt(backgroundDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
+			if(box)
+			{
+				// save the previous DC contents as the background
+				BitBlt(backgroundDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
+			}
+			else
+			{
+				// paint desktop on display DC and then into background buffer
+				PaintDesktopEx(backgroundDC, 0, 0, width, height, r.left, r.top, FALSE);
+				// PaintDesktop(hDC);
+				// BitBlt(backgroundDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
+			}
 		}
 		
 		background->apply(backgroundDC, 0, 0, width, height);
@@ -531,6 +593,22 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 {
 	switch(message)
 	{
+		case LM_SETLABELTEXT:
+		{
+			setText(string((const char *) lParam));
+			return true;
+		}
+
+		case WM_COPYDATA:
+		{
+			COPYDATASTRUCT *cds = (COPYDATASTRUCT *) lParam;
+			
+			if(cds->dwData == LM_SETLABELTEXT)
+				setText(string((const char *) cds->lpData));
+
+			return true;
+		}
+
 		case WM_CLOSE:
 		{
 			lResult = 0;
@@ -539,54 +617,108 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 
 		case WM_LBUTTONDBLCLK:
 		{
+			if(leftDoubleClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onLButtonDblClk((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_LBUTTONDOWN:
 		{
+			if(leftDoubleClickCommand.empty() && leftClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onLButtonDown((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_LBUTTONUP:
 		{
+			if(leftDoubleClickCommand.empty() && leftClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onLButtonUp((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_MBUTTONDBLCLK:
 		{
+			if(middleDoubleClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onMButtonDblClk((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_MBUTTONDOWN:
 		{
+			if(middleDoubleClickCommand.empty() && middleClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onMButtonDown((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_MBUTTONUP:
 		{
+			if(middleDoubleClickCommand.empty() && middleClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onMButtonUp((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_RBUTTONDBLCLK:
 		{
+			if(rightDoubleClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onRButtonDblClk((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_RBUTTONDOWN:
 		{
+			if(rightDoubleClickCommand.empty() && rightClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onRButtonDown((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
 
 		case WM_RBUTTONUP:
 		{
+			if(rightDoubleClickCommand.empty() && rightClickCommand.empty())
+			{
+				PostMessage(box, message, wParam, lParam);
+				return true;
+			}
+
 			onRButtonUp((int) (short) LOWORD(lParam), (int) (short) HIWORD(lParam));
 			return true;
 		}
@@ -650,10 +782,20 @@ LRESULT Label::windowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 
 	if(label)
 	{
-		LRESULT lResult = 0;
+		if(message == WM_DESTROY)
+		{
+			label->hWnd = 0;
+			SetWindowLong(hWnd, 0, 0);
+			// labelList.remove(label);
+			delete label;
+		}
+		else
+		{
+			LRESULT lResult = 0;
 
-		if(label->onWindowMessage(message, wParam, lParam, lResult))
-			return lResult;
+			if(label->onWindowMessage(message, wParam, lParam, lResult))
+				return lResult;
+		}
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);

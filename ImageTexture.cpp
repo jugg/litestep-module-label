@@ -30,7 +30,7 @@ NameValuePair modeConstants[] =
 	{ 0, 0 }
 };
 
-void ImageTexture::configure(const string &prefix)
+void ImageTexture::configure(const string &prefix, const string &subKey)
 {
 	string imageFile = GetRCString(prefix, "Image", "");
 	bitmap = LoadLSImage(imageFile.c_str(), 0);

@@ -20,6 +20,8 @@ public:
 	boolean isAlwaysOnTop() const { return alwaysOnTop; }
 	boolean isVisible() const { return visible; }
 
+	HWND getBox() const { return box; }
+
 	int getHeight() const { return height; }
 	int getWidth() const { return width; }
 	int getX() const { return x; }
@@ -38,6 +40,7 @@ public:
 
 	void setAlwaysOnTop(boolean alwaysOnTop);
 	void setBackground(Texture *background);
+	void setBox(HWND box);
 	void setFont(Font *font);
 	void setJustify(int justify);
 	void setText(const string &text);
@@ -62,6 +65,7 @@ private:
 
 	HWND hWnd;
 	HINSTANCE hInstance;
+	HWND box;
 
 	HDC backgroundDC;
 	HDC bufferDC;

@@ -39,6 +39,11 @@ private:
 	string getTime(const vector<string> &arguments, boolean *dynamic);
 	string getUptime(const vector<string> &arguments, boolean *dynamic);
 	string getUserName(boolean *dynamic);
+	string getWinampSong(boolean *dynamic);
+	string getWinampTime(boolean *dynamic);
+	string getWinampRemainTime(boolean *dynamic);
+	string getWinampTotalTime(boolean *dynamic);
+	string getWinampStatus(boolean *dynamic);
 	string getWindowTitle(const string &windowClass, boolean *dynamic);
 
 	string hideIfEmpty(const string &s, Label *label, boolean *dynamic);

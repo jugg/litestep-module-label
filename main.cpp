@@ -15,7 +15,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			strcpy((char *) lParam, "Label 1.5 (Maduin)");
+			strcpy((char *) lParam, "Label 1.6 (Maduin)");
 			return strlen((char *) lParam);
 		}
 
@@ -113,19 +113,60 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 	::hInstance = hInstance;
 	systemInfo = new SystemInfo();
 
-	StringList labelNames = GetRCNameList("Labels", "");
+	StringList labelNames = GetRCNameList("", "Labels");
 	if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
+
+	AddBangCommand("!LabelCreate", CreateLabelBangCommand);
+	AddBangCommand("!LabelDebug", DebugBangCommand);
 
 	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
 	{
-		Label *label = new Label(*it);
-		label->load(hInstance);
-		labelList.insert(labelList.end(), label);
+		if(!GetRCBoolean(*it, "DockToBox"))
+		{
+			Label *label = new Label(*it);
+			label->load(hInstance);
+			// labelList.insert(labelList.end(), label);
+		}
 	}
 
-	AddBangCommand("!LabelCreate", CreateLabelBangCommand);
-
 	return 0;
+}
+
+int initWharfModule(HWND hParent, HINSTANCE hInstance, void *pv)
+{
+	if(pv == 0)
+	{
+		// loaded as LSBox *Module, hParent is the main box window
+		char boxName[64];
+		GetWindowText(hParent, boxName, 64);
+
+		StringList labelNames = GetRCNameList("", "Labels");
+		if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
+
+		for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
+		{
+			string dockToBox = GetRCString(*it, "DockToBox", "");
+
+			if(stricmp(boxName, dockToBox.c_str()) == 0)
+			{
+				Label *label = new Label(*it);
+				label->setBox(hParent);
+				label->load(hInstance);
+				// labelList.insert(labelList.end(), label);
+			}
+		}
+
+		return 0;
+	}
+	else
+	{
+		MessageBox(hParent,
+			"Label.dll cannot be loaded as a wharf module.",
+			"Label",
+			MB_SETFOREGROUND);
+
+		return 1;
+	}
 }
 
 extern HDC hdcDesktop;
@@ -133,12 +174,11 @@ extern HBITMAP hbmDesktop;
 
 void quitModule(HINSTANCE hInstance)
 {
+	while(!labelList.empty())
+		delete *(labelList.begin());
+
 	RemoveBangCommand("!LabelCreate");
-
-	for(LabelListIterator it = labelList.begin(); it != labelList.end(); it++)
-		delete *it;
-
-	labelList.clear();
+	RemoveBangCommand("!LabelDebug");
 
 	SendMessage(GetLitestepWnd(),
 		LM_UNREGISTERMESSAGE,
@@ -153,6 +193,11 @@ void quitModule(HINSTANCE hInstance)
 	hbmDesktop = (HBITMAP) SelectObject(hdcDesktop, hbmDesktop);
 	DeleteDC(hdcDesktop);
 	DeleteObject(hbmDesktop);
+}
+
+void quitWharfModule(HINSTANCE hInstance)
+{
+	// ...
 }
 
 Label *lookupLabel(const string &name)

@@ -1,3 +1,5 @@
 EXPORTS
 	initModuleEx
 	quitModule
+	initWharfModule
+	quitWharfModule

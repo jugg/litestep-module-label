@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
-                                Label 1.5
+                                Label 1.6
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
-                        Last Modified: 04-10-2001
+                        Last Modified: 05-28-2001
 --------------------------------------------------------------------------
 
 Overview
@@ -162,6 +162,12 @@ LabelUpdateInterval <number>
 Sets the amount of time in milliseconds between updates for labels that
 contain dynamically updated content. If no value is provided then the
 default is 1000 (1 second).
+
+LabelDockToBox <name>
+Sets the name of the box (lsbox.dll) that this label should be loaded
+into. The default is no value in which case the label is loaded normally.
+See the section below entitled 'Using Labels inside LSBox' for more
+information.
 
 
 Bang Commands
@@ -394,6 +400,24 @@ Current system uptime. Format is optional and is explained below.
 userName
 Name of the user currently logged on.
 
+winampSong
+Song currently loaded in Winamp. If Winamp is not running or there is not
+song loaded this will be empty.
+
+winampTime
+Time elapsed on the current song in Winamp.
+
+winampRemainTime
+Time remaining on the current song in Winamp.
+
+winampTotalTime
+Length of the current song in Winamp.
+
+winampStatus
+Current status of Winamp. If Winamp is running this will be one of
+"Playing", "Paused", or "Stopped". If Winamp is not running this will be
+empty.
+
 windowTitle('class')
 Title of the window with the given class name.
 
@@ -458,6 +482,65 @@ ss			second with leading zero (00-59)
 am/pm		am/pm indicator
 
 For [uptime] only the day, hour, minute, and second values are valid.
+
+
+Default Configurations using AllLabels
+--------------------------------------
+
+To help reduce redundant commads in the step.rc, label.dll now supports
+default settings. By prepending "AllLabels" to the name of the setting you
+can make defaults that apply to all labels. For example, the following
+sets the a default font which will be used for LabelOne and LabelTwo but
+which is overridden by LabelThree:
+
+AllLabelsFont "Tahoma"
+AllLabelsFontHeight 12
+AllLabelsFontBold
+AllLabelsFontColor 255 255 255
+AllLabelsJustify left
+
+LabelOneText "Hello!"
+LabelOneX 100
+LabelOneY 100
+LabelOneJustify center
+
+LabelTwoText "Hi!"
+LabelTwoX 200
+LabelTwoY 100
+
+LabelThreeText "Greetings!"
+LabelThreeX 300
+LabelThreeY 100
+LabelThreeFont "Arial"
+LabelThreeFontHeight 11
+LabelThreeFontColor 255 255 255
+
+
+Using Labels inside LSBox
+-------------------------
+
+As of version 1.6, label.dll is compatible with BlkHawk's LSBox module for
+Litestep. BlkHawk also released a modification of label for use with LSBox
+and my code is based on his, however my code adds the LabelLSBoxName
+setting (which is required if the label is to be loaded into a box). This
+way you can have labels in multiple boxes as well as outside of boxes.
+
+In order to get labels inside of a box first add a line like the following
+to the .box file (adjusting the path to label.dll if needed):
+
+*Module label.dll
+
+Then for each label that you wish to put in that box, add a LSBoxName
+setting giving the name of the box (LSBoxName setting in the .box file).
+For example, to load a label named MyLabel inside a box named MyBox:
+
+MyLabelLSBoxName MyBox
+
+When a label is loaded inside of a box the position (LabelX/Y) are
+relative to the upper-left corner of the box. For now negative coordinates
+and center-relative coordinates do not work inside a box. Also, label.dll
+must be loaded via a LoadModule command in step.rc even if labels are only
+used from within boxes.
 
 
 Disclaimer

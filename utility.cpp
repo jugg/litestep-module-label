@@ -61,19 +61,51 @@ void ModifyStyle(HWND hWnd, DWORD removeStyle, DWORD addStyle)
 		(GetWindowLong(hWnd, GWL_STYLE) & ~removeStyle) | addStyle);
 }
 
-// retrieve a boolean value from the step.rc
-boolean GetRCBoolean(const string &prefix, const string &baseName)
+// check to see if a given key exists in the step.rc
+int keyExists(const string &key)
 {
-	string name = prefix + baseName;
-	return GetRCBool(name.c_str(), TRUE) ? true : false;
+	const char fakeValue[] = "\001";
+	char buffer[4];
+
+	GetRCString(key.c_str(), buffer, fakeValue, 4);
+	return buffer[0] != '\001';
 }
 
-// retrieve a color value from step.rc
-int GetRCColor(const string &prefix, const string &baseName, int defaultVal)
+// retrieve a boolean value from the step.rc
+boolean GetRCBoolean(const string &object, const string &subKey, boolean defaultVal)
 {
-	string name = prefix + baseName;
-	return GetRCColor(name.c_str(), defaultVal);
+	string key = object + subKey;
+	return GetRCBoolDef(key.c_str(), defaultVal) ? true : false;
 }
+
+/*
+boolean GetRCBoolean(const string &object, const string &subKey)
+{
+	string key = object + subKey;
+	string allLabelsKey = allLabels + subKey;
+
+	return GetRCBoolDef(key.c_str(),
+		GetRCBoolDef(allLabelsKey.c_str(), FALSE)) ? true : false;
+}
+*/
+
+// retrieve a color value from step.rc
+int GetRCColor(const string &object, const string &subKey, int defaultVal)
+{
+	string key = object + subKey;
+	return GetRCColor(key.c_str(), defaultVal);
+}
+
+/*
+int GetRCColor(const string &object, const string &subKey, int defaultVal)
+{
+	string key = object + subKey;
+	string allLabelsKey = allLabels + subKey;
+
+	return GetRCColor(key.c_str(),
+		GetRCColor(allLabelsKey.c_str(), defaultVal));
+}
+*/
 
 // parse a coordinate specification
 int ParseCoordinate(const string &aString, int defaultVal, int maxVal)
@@ -190,11 +222,18 @@ int GetRCDimension(const string &prefix, const string &baseName, int defaultVal,
 }
 
 // retrieve a font from step.rc
-Font *GetRCFont(const string &prefix, const string &baseName)
+Font *GetRCFont(const string &object, const string &subKey, Font *defaultVal)
 {
-	Font *font = new Font();
-	font->configure(prefix + baseName);
-	return font;
+	if(GetRCBoolean(object, subKey + "Font") || !defaultVal)
+	{
+		Font *font = new Font();
+		font->configure(object);
+		return font;
+	}
+	else
+	{
+		return defaultVal;
+	}
 }
 
 // parse a string into a list of names
@@ -288,14 +327,37 @@ int GetRCNamedValue(const string &prefix, const string &baseName, const NameValu
 }
 
 // retrieve an integer value from step.rc, make sure it is between minVal and maxVal inclusive
-int GetRCInt(const string &prefix, const string &baseName, int defaultVal, int minVal, int maxVal)
+int GetRCInt(const string &object, const string &subKey, int defaultVal, int minVal, int maxVal)
 {
-	string name = prefix + baseName;
-	return max(min(GetRCInt(name.c_str(), defaultVal), maxVal), minVal);
+	string key = object + subKey;
+	int answer = GetRCInt(key.c_str(), defaultVal);
+	return max(min(answer, maxVal), minVal);
+}
+
+/*
+int GetRCInt(const string &object, const string &subKey, int defaultVal, int minVal, int maxVal)
+{
+	string key = object + subKey;
+	string allLabelsKey = allLabels + subKey;
+
+	int answer = GetRCInt(key.c_str(),
+		GetRCInt(allLabelsKey.c_str(), defaultVal));
+
+	return max(min(answer, maxVal), minVal);
+}
+*/
+
+// retrieve a line from step.rc
+string GetRCLine(const string &object, const string &subKey, const string &defaultVal)
+{
+	string key = object + subKey;
+	char buffer[1024];
+	GetRCLine(key.c_str(), buffer, 1024, defaultVal.c_str());
+	return string(buffer);
 }
 
 // retrieve a line from step.rc
-string GetRCLine(const string &prefix, const string &baseName, const string &defaultVal)
+/* string GetRCLine(const string &prefix, const string &baseName, const string &defaultVal)
 {
 	string name = prefix + baseName;
 	char buffer[1024];
@@ -304,19 +366,32 @@ string GetRCLine(const string &prefix, const string &baseName, const string &def
 		return string(buffer);
 
 	return defaultVal;
-}
+} */
 
 // retrieve a string value from step.rc
-string GetRCString(const string &prefix, const string &baseName, const string &defaultVal)
+string GetRCString(const string &object, const string &subKey, const string &defaultVal)
 {
-	string name = prefix + baseName;
+	string key = object + subKey;
+	char buffer[1024];
+	GetRCString(key.c_str(), buffer, defaultVal.c_str(), 1024);
+	return string(buffer);
+}
+
+/*
+string GetRCString(const string &object, const string &subKey, const string &defaultVal)
+{
+	string key = object + subKey;
+	string allLabelsKey = allLabels + subKey;
+
+	char allLabelsBuffer[1024];
 	char buffer[1024];
 
-	if(GetRCString(name.c_str(), buffer, 0, 1024))
-		return string(buffer);
+	GetRCString(allLabelsKey.c_str(), allLabelsBuffer, defaultVal.c_str(), 1024);
+	GetRCString(key.c_str(), buffer, allLabelsBuffer, 1024);
 
-	return defaultVal;
+	return string(buffer);
 }
+*/
 
 StringVector GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal)
 {
@@ -353,25 +428,28 @@ StringVector GetRCStringVector(const string &prefix, const string &baseName, con
 }
 
 // retrieve a texture from step.rc
-Texture *GetRCTexture(const string &prefix, const string &baseName)
+Texture *GetRCTexture(const string &object, const string &subKey, Texture *defaultVal)
 {
-	string name = prefix + baseName;
 	Texture *texture;
 
-	if(GetRCBoolean(name, "Image"))
+	if(GetRCBoolean(object, subKey + "Image"))
 	{
 		texture = new ImageTexture();
-		texture->configure(name);
+		texture->configure(object, subKey);
 	}
-	else if(GetRCBoolean(name, "Transparent"))
+	else if(GetRCBoolean(object, subKey + "Transparent"))
 	{
 		texture = new BlankTexture();
-		texture->configure(name);
+		texture->configure(object, subKey);
+	}
+	else if(defaultVal)
+	{
+		texture = defaultVal;
 	}
 	else
 	{
 		texture = new DefaultTexture();
-		texture->configure(name);
+		texture->configure(object, subKey);
 	}
 
 	return texture;

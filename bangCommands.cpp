@@ -68,7 +68,35 @@ void CreateLabelBangCommand(HWND caller, const char *arguments)
 {
 	Label *label = new Label(arguments);
 	label->load(hInstance);
-	labelList.insert(labelList.end(), label);
+	// labelList.insert(labelList.end(), label);
+}
+
+// display label debugging info
+void DebugBangCommand(HWND caller, const char *arguments)
+{
+	LabelListIterator it = labelList.begin();
+	string message;
+
+	while(it != labelList.end())
+	{
+		string temp = (*it)->getName();
+
+		if((*it)->getBox() != 0)
+		{
+			char buffer[64];
+			GetWindowText((*it)->getBox(), buffer, 64);
+			temp += " " + string(buffer);
+		}
+
+		temp += "\r\n";
+		message += temp;
+		it++;
+	}
+	
+	MessageBox(caller,
+		message.c_str(),
+		"Label Debug Info",
+		MB_SETFOREGROUND);
 }
 
 // make a label always on top
@@ -88,7 +116,7 @@ void DestroyBangCommand(HWND caller, const char *bangCommandName, const char *ar
 
 	if(label != 0)
 	{
-		labelList.remove(label);
+		// labelList.remove(label);
 		delete label;
 	}
 }
@@ -237,4 +265,3 @@ void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arg
 
 	if(label != 0) label->update();
 }
-

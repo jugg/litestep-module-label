@@ -14,17 +14,17 @@ Font::~Font()
 
 void Font::configure(const string &prefix)
 {
-	shadow = GetRCBoolean(prefix, "Shadow");
-	shadowColor = GetRCColor(prefix, "ShadowColor", RGB(0, 0, 0));
-	shadowX = GetRCInt(prefix, "ShadowX", 1);
-	shadowY = GetRCInt(prefix, "ShadowY", 1);
+	shadow = GetRCBoolean(prefix, "FontShadow");
+	shadowColor = GetRCColor(prefix, "FontShadowColor", RGB(0, 0, 0));
+	shadowX = GetRCInt(prefix, "FontShadowX", 1);
+	shadowY = GetRCInt(prefix, "FontShadowY", 1);
 
-	name = GetRCString(prefix, "", "Arial");
-	height = GetRCInt(prefix, "Height", 15, 0);
-	color = GetRCColor(prefix, "Color", shadow ? RGB(255, 255, 255) : RGB(0, 0, 0));
+	name = GetRCString(prefix, "Font", "Arial");
+	height = GetRCInt(prefix, "FontHeight", 15, 0);
+	color = GetRCColor(prefix, "FontColor", shadow ? RGB(255, 255, 255) : RGB(0, 0, 0));
 
-	bold = GetRCBoolean(prefix, "Bold");
-	italic = GetRCBoolean(prefix, "Italic");
+	bold = GetRCBoolean(prefix, "FontBold");
+	italic = GetRCBoolean(prefix, "FontItalic");
 }
 
 void Font::apply(HDC hDC, int x, int y, int width, int height, const string &text, unsigned int flags)

@@ -25,20 +25,20 @@ HWND GetLitestepDesktop();
 boolean IsAppWindow(HWND hWnd);
 void ModifyStyle(HWND hWnd, DWORD removeStyle, DWORD addStyle);
 
-boolean GetRCBoolean(const string &prefix, const string &baseName);
+boolean GetRCBoolean(const string &prefix, const string &baseName, boolean defaultVal = false);
 int GetRCColor(const string &prefix, const string &baseName, int defaultVal);
 int ParseCoordinate(const string &aString, int defaultVal, int maxVal);
 int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal);
 int ParseDimension(const string &aString, int defaultVal, int maxVal);
 int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal);
-Font *GetRCFont(const string &prefix, const string &baseName);
+Font *GetRCFont(const string &prefix, const string &baseName, Font *defaultVal = 0);
 int GetRCInt(const string &prefix, const string &baseName, int defaultVal, int minVal = MIN_INTEGER, int maxVal = MAX_INTEGER);
 string GetRCLine(const string &prefix, const string &baseName, const string &defaultVal);
 int GetRCNamedValue(const string &prefix, const string &baseName, const NameValuePair *nameValuePairs, int defaultVal);
 StringList GetRCNameList(const string &prefix, const string &baseName);
 string GetRCString(const string &prefix, const string &baseName, const string &defaultVal);
 vector<string> GetRCStringVector(const string &prefix, const string &baseName, const string &defaultVal);
-Texture *GetRCTexture(const string &prefix, const string &baseName);
+Texture *GetRCTexture(const string &prefix, const string &baseName, Texture *defaultVal = 0);
 
 void PaintDesktopEx(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, int xSrc, int ySrc, BOOL updateCache);
 

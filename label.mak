@@ -46,6 +46,7 @@ CLEAN :
 	-@erase "$(INTDIR)\Font.obj"
 	-@erase "$(INTDIR)\ImageTexture.obj"
 	-@erase "$(INTDIR)\Label.obj"
+	-@erase "$(INTDIR)\LabelSettings.obj"
 	-@erase "$(INTDIR)\main.obj"
 	-@erase "$(INTDIR)\processor.obj"
 	-@erase "$(INTDIR)\SystemInfo.obj"
@@ -76,7 +77,8 @@ LINK32_OBJS= \
 	"$(INTDIR)\main.obj" \
 	"$(INTDIR)\processor.obj" \
 	"$(INTDIR)\SystemInfo.obj" \
-	"$(INTDIR)\utility.obj"
+	"$(INTDIR)\utility.obj" \
+	"$(INTDIR)\LabelSettings.obj"
 
 "$(OUTDIR)\label.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -100,6 +102,7 @@ CLEAN :
 	-@erase "$(INTDIR)\Font.obj"
 	-@erase "$(INTDIR)\ImageTexture.obj"
 	-@erase "$(INTDIR)\Label.obj"
+	-@erase "$(INTDIR)\LabelSettings.obj"
 	-@erase "$(INTDIR)\main.obj"
 	-@erase "$(INTDIR)\processor.obj"
 	-@erase "$(INTDIR)\SystemInfo.obj"
@@ -131,7 +134,8 @@ LINK32_OBJS= \
 	"$(INTDIR)\main.obj" \
 	"$(INTDIR)\processor.obj" \
 	"$(INTDIR)\SystemInfo.obj" \
-	"$(INTDIR)\utility.obj"
+	"$(INTDIR)\utility.obj" \
+	"$(INTDIR)\LabelSettings.obj"
 
 "$(OUTDIR)\label.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -204,6 +208,11 @@ SOURCE=.\ImageTexture.cpp
 SOURCE=.\Label.cpp
 
 "$(INTDIR)\Label.obj" : $(SOURCE) "$(INTDIR)"
+
+
+SOURCE=.\LabelSettings.cpp
+
+"$(INTDIR)\LabelSettings.obj" : $(SOURCE) "$(INTDIR)"
 
 
 SOURCE=.\main.cpp

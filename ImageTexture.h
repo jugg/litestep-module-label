@@ -10,7 +10,7 @@ public:
 	ImageTexture();
 	virtual ~ImageTexture();
 
-	void configure(const string &prefix);
+	void configure(const string &prefix, const string &subKey);
 	void apply(HDC hDC, int x, int y, int width, int height);
 	boolean isTransparent() const;
 

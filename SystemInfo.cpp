@@ -208,6 +208,16 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return getUptime(arguments, dynamic);
 	else if(name == "username")
 		return getUserName(dynamic);
+	else if(name == "winampsong")
+		return getWinampSong(dynamic);
+	else if(name == "winamptime")
+		return getWinampTime(dynamic);
+	else if(name == "winampremaintime")
+		return getWinampRemainTime(dynamic);
+	else if(name == "winamptotaltime")
+		return getWinampTotalTime(dynamic);
+	else if(name == "winampstatus")
+		return getWinampStatus(dynamic);
 	else if(name == "windowtitle" && arguments.size() >= 1)
 		return getWindowTitle(arguments[0], dynamic);
 	else if(name == "hideifempty" && arguments.size() >= 1)
@@ -586,6 +596,90 @@ string SystemInfo::getUserName(boolean *dynamic)
 	return string(buffer);
 }
 
+string SystemInfo::getWinampSong(boolean *dynamic)
+{
+	if(dynamic) *dynamic = true;
+
+	HWND hWinamp = FindWindow("Winamp v1.x", 0);
+	if(!hWinamp) return "";
+
+	char buffer[256];
+	GetWindowText(hWinamp, buffer, 256);
+
+	if(strstr(buffer, " - Winamp") == 0)
+		return "";
+
+	return trim(between(string(buffer), ".", "-"));
+}
+
+string SystemInfo::getWinampTime(boolean *dynamic)
+{
+	if(dynamic) *dynamic = true;
+
+	HWND hWinamp = FindWindow("Winamp v1.x", 0);
+	if(!hWinamp) return "0:00";
+
+	int seconds = SendMessage(hWinamp, WM_USER, 0, 105) / 1000;
+	int minutes = seconds / 60;
+	seconds %= 60;
+
+	char buffer[32];
+	wsprintf(buffer, "%d:%02d", minutes, seconds);
+	return string(buffer);
+}
+
+string SystemInfo::getWinampRemainTime(boolean *dynamic)
+{
+	if(dynamic) *dynamic = true;
+
+	HWND hWinamp = FindWindow("Winamp v1.x", 0);
+	if(!hWinamp) return "0:00";
+
+	int seconds = SendMessage(hWinamp, WM_USER, 1, 105) - SendMessage(hWinamp, WM_USER, 0, 105) / 1000;
+	int minutes = seconds / 60;
+	seconds %= 60;
+
+	char buffer[32];
+	wsprintf(buffer, "%d:%02d", minutes, seconds);
+	return string(buffer);
+}
+
+string SystemInfo::getWinampTotalTime(boolean *dynamic)
+{
+	if(dynamic) *dynamic = true;
+
+	HWND hWinamp = FindWindow("Winamp v1.x", 0);
+	if(!hWinamp) return "0:00";
+
+	int seconds = SendMessage(hWinamp, WM_USER, 1, 105);
+	int minutes = seconds / 60;
+	seconds %= 60;
+
+	char buffer[32];
+	wsprintf(buffer, "%d:%02d", minutes, seconds);
+	return string(buffer);
+}
+
+string SystemInfo::getWinampStatus(boolean *dynamic)
+{
+	if(dynamic) *dynamic = true;
+
+	HWND hWinamp = FindWindow("Winamp v1.x", 0);
+	if(!hWinamp) return "";
+
+	int status = SendMessage(hWinamp, WM_USER, 0, 104);
+
+	if(status == 1) {
+		return "Playing";
+	}
+	else if(status == 3) {
+		return "Paused";
+	}
+	else {
+		return "Stopped";
+	}
+}
+
 string SystemInfo::getWindowTitle(const string &windowClass, boolean *dynamic)
 {
 	if(dynamic) *dynamic = true;
@@ -772,7 +866,7 @@ string SystemInfo::formatByteSize(largeInt byteSize)
 	char buffer[32];
 
 	if(remainder > 0)
-		wsprintf(buffer, "%d.%d %s", (int) quotient, (int) remainder, units[i]);
+		wsprintf(buffer, "%d.%02d %s", (int) quotient, (int) remainder, units[i]);
 	else
 		wsprintf(buffer, "%d %s", (int) quotient, units[i]);
 

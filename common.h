@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -27,5 +28,9 @@ typedef __int64 largeInt;
 #include "lsapi.h"
 #include "wharfdata.h"
 #include "utility.h"
+
+#define LM_SETLABELTEXT 9600
+
+typedef map<HINSTANCE, HWND> InstanceMap;
 
 #endif

@@ -5,7 +5,7 @@ class Texture
 {
 public:
 
-	virtual void configure(const string &prefix) = 0;
+	virtual void configure(const string &prefix, const string &subKey) = 0;
 	virtual void apply(HDC hDC, int x, int y, int width, int height) = 0;
 	virtual boolean isTransparent() const = 0;
 };

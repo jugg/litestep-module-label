@@ -1,6 +1,20 @@
-1.5, ??-??-????
+1.6, 05-28-2001
+- added AllLabels support
+- added LSBox compatibility
+- added native Winamp info
+	- winampSong
+	- winampTime
+	- winampRemainTime
+	- winampTotalTime
+	- winampStatus
+
+1.51, 04-19-2001
+- bugfix: in [date] and [time] midnight showed up as 0 o'clock
+- bugfix: in [uptime] the hour wrapped as 12
+
+1.5, 04-11-2001
 - added support for dynamic label creation/destruction
-- added !CreateLabel
+- added !LabelCreate
 - added !LabelDestroy
 - extended [date] and [time] to support user-defined formats
 - added [uptime]
