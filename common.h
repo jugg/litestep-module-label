@@ -16,6 +16,7 @@ typedef __int64 largeInt;
 #define STRICT
 
 #include <windows.h>
+#include <winsock.h>
 #include "lsapi.h"
 #include "wharfdata.h"
 #include "utility.h"

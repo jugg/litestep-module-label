@@ -8,6 +8,8 @@ typedef list<Label *>::iterator LabelListIterator;
 HWND messageHandler;
 LabelList labelList;
 
+#define LM_UPDATEBG (WM_USER + 1)
+
 LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
@@ -18,7 +20,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 			return strlen((char *) lParam);
 		}
 
-		case LM_REFRESH:
+		/* case LM_REFRESH:
 		{
 			StringList labelNames = GetRCNameList("Labels", "", "Label");
 
@@ -47,6 +49,25 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 				label->load((HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE));
 				labelList.insert(labelList.end(), label);
 			}
+
+			return 0;
+		} */
+
+		case LM_UPDATEBG:
+		{
+			PaintDesktopEx(0, 0, 0, 0, 0, 0, 0, TRUE);
+
+			for(LabelListIterator i = labelList.begin(); i != labelList.end(); i++)
+				(*i)->repaint(true);
+
+			return 0;
+		}
+
+		case WM_DISPLAYCHANGE:
+		case WM_SETTINGCHANGE:
+		{
+			PostMessage(hWnd, LM_UPDATEBG, 0, 0);
+			return 0;
 		}
 	}
 
@@ -91,7 +112,9 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 		(LPARAM) lsMessages);
 
 	systemInfo = new SystemInfo();
-	StringList labelNames = GetRCNameList("Labels", "", "Label");
+
+	StringList labelNames = GetRCNameList("Labels", "");
+	if(labelNames.empty()) labelNames.insert(labelNames.end(), "Label");
 
 	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
 	{
@@ -102,6 +125,9 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 
 	return 0;
 }
+
+extern HDC hdcDesktop;
+extern HBITMAP hbmDesktop;
 
 void quitModule(HINSTANCE hInstance)
 {
@@ -119,6 +145,10 @@ void quitModule(HINSTANCE hInstance)
 	UnregisterClass("LabelMessageHandlerLS", hInstance);
 
 	delete systemInfo;
+
+	hbmDesktop = (HBITMAP) SelectObject(hdcDesktop, hbmDesktop);
+	DeleteDC(hdcDesktop);
+	DeleteObject(hbmDesktop);
 }
 
 Label *lookupLabel(const string &name)

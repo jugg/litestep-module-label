@@ -81,6 +81,7 @@ void Label::reconfigure()
 	setFont(GetRCFont(name, "Font"));
 	setJustify(GetRCNamedValue(name, "Justify", justifyValues, DT_CENTER));
 	setText(GetRCString(name, "Text", ""));
+	setUpdateInterval(GetRCInt(name, "UpdateInterval", 1000));
 	setLeftBorder(GetRCInt(name, "LeftBorder", 0));
 	setTopBorder(GetRCInt(name, "TopBorder", 0));
 	setRightBorder(GetRCInt(name, "RightBorder", 0));
@@ -134,6 +135,12 @@ void Label::setFont(Font *font)
 	repaint();
 }
 
+void Label::setUpdateInterval(int updateInterval)
+{
+	this->updateInterval = updateInterval;
+	if(hWnd != 0 && dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
+}
+
 void Label::setJustify(int justify)
 {
 	this->justify = justify;
@@ -148,7 +155,7 @@ void Label::setText(const string &text)
 	if(hWnd != 0)
 	{
 		if(dynamicText)
-			SetTimer(hWnd, TIMER_UPDATE, 1000, 0);
+			SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
 		else
 			KillTimer(hWnd, TIMER_UPDATE);
 	}
@@ -280,11 +287,17 @@ void Label::show()
 			this);
 
 		setAlwaysOnTop(alwaysOnTop);
-		if(dynamicText) SetTimer(hWnd, TIMER_UPDATE, 1000, 0);
+		if(dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
 	}
 
 	visible = true;
 	ShowWindow(hWnd, SW_SHOW);
+}
+
+void Label::update()
+{
+	text = systemInfo->processLabelText(originalText);
+	repaint();
 }
 
 void Label::onLButtonDblClk(int x, int y)
@@ -412,12 +425,12 @@ void Label::onMouseMove(int x, int y)
 void Label::onPaint(HDC hDC)
 {
 	RECT r;
-	GetClientRect(hWnd, &r);
+	GetWindowRect(hWnd, &r);
 
 	int width = r.right - r.left;
 	int height = r.bottom - r.top;
 
-	// keep a cached rendering of the background
+	// keep a cached rendition of the background
 	if(backgroundBitmap == 0)
 	{
 		if(backgroundDC == 0)
@@ -429,8 +442,9 @@ void Label::onPaint(HDC hDC)
 		if(background->isTransparent())
 		{
 			// paint desktop on display DC and then into background buffer
-			PaintDesktop(hDC);
-			BitBlt(backgroundDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
+			PaintDesktopEx(backgroundDC, 0, 0, width, height, r.left, r.top, FALSE);
+			// PaintDesktop(hDC);
+			// BitBlt(backgroundDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
 		}
 		
 		background->apply(backgroundDC, 0, 0, width, height);
@@ -503,8 +517,7 @@ void Label::onTimer(int timerID)
 	}
 	else if(timerID == TIMER_UPDATE)
 	{
-		text = systemInfo->processLabelText(originalText);
-		repaint();
+		update();
 	}
 }
 

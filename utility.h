@@ -33,13 +33,17 @@ Font *GetRCFont(const string &prefix, const string &baseName);
 int GetRCInt(const string &prefix, const string &baseName, int defaultVal, int minVal = MIN_INTEGER, int maxVal = MAX_INTEGER);
 string GetRCLine(const string &prefix, const string &baseName, const string &defaultVal);
 int GetRCNamedValue(const string &prefix, const string &baseName, const NameValuePair *nameValuePairs, int defaultVal);
-StringList GetRCNameList(const string &prefix, const string &baseName, const string &defaultVal);
+StringList GetRCNameList(const string &prefix, const string &baseName);
 string GetRCString(const string &prefix, const string &baseName, const string &defaultVal);
 Texture *GetRCTexture(const string &prefix, const string &baseName);
+
+void PaintDesktopEx(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, int xSrc, int ySrc, BOOL updateCache);
 
 void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp);
 void HorizontalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp);
 void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp);
 void MultiBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, int cxLeft, int cyTop, int cxRight, int cyBottom, int mode, DWORD rasterOp);
+
+LPTSTR RegQueryStringValue(HKEY hKey, LPCTSTR pszSubKey, LPCTSTR pszValueName, LPTSTR pszBuffer, int nBufferSize, LPTSTR pszDefaultValue);
 
 #endif

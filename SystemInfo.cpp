@@ -1,9 +1,13 @@
 #include "common.h"
+#include <stdio.h>
 #include "processor.h"
 #include "SystemInfo.h"
 
 SystemInfo::SystemInfo()
 {
+	WSADATA wd;
+	WSAStartup(0x0101, &wd);
+
 	usingCPU = false;
 }
 
@@ -11,6 +15,8 @@ SystemInfo::~SystemInfo()
 {
 	if(usingCPU)
 		endProcessorStatistics();
+
+	WSACleanup();
 }
 
 string SystemInfo::processLabelText(const string &text, boolean *dynamic)
@@ -79,6 +85,10 @@ string SystemInfo::evaluateFunction(const string &functionName, const string &ar
 		return getCPU(argument, dynamic);
 	else if(name == "date")
 		return getDate(argument, dynamic);
+	else if(name == "hostname")
+		return getHostName(argument, dynamic);
+	else if(name == "ip")
+		return getIP(argument, dynamic);
 	else if(name == "memavailable")
 		return getMemAvailable(argument, dynamic);
 	else if(name == "meminuse")
@@ -87,6 +97,8 @@ string SystemInfo::evaluateFunction(const string &functionName, const string &ar
 		return getMemTotal(argument, dynamic);
 	else if(name == "os")
 		return getOS(argument, dynamic);
+	else if(name == "randomline")
+		return getRandomLine(argument, dynamic);
 	else if(name == "swapavailable")
 		return getSwapAvailable(argument, dynamic);
 	else if(name == "swapinuse")
@@ -97,8 +109,12 @@ string SystemInfo::evaluateFunction(const string &functionName, const string &ar
 		return getTime(argument, dynamic);
 	else if(name == "username")
 		return getUserName(argument, dynamic);
+	else if(name == "capitalize")
+		return capitalize(argument);
 	else if(name == "lowercase")
 		return lowerCase(argument);
+	else if(name == "trim")
+		return trim(argument);
 	else if(name == "uppercase")
 		return upperCase(argument);
 	
@@ -203,6 +219,30 @@ string SystemInfo::getDate(const string &argument, boolean *dynamic)
 	return string(buffer);
 }
 
+string SystemInfo::getHostName(const string &argument, boolean *dynamic)
+{
+	char hostName[256];
+	gethostname(hostName, 256);
+	hostent *hostInfo = gethostbyname(hostName);
+
+	if(hostInfo)
+		return string(hostInfo->h_name);
+	
+	return "";
+}
+
+string SystemInfo::getIP(const string &argument, boolean *dynamic)
+{
+	char hostName[256];
+	gethostname(hostName, 256);
+	hostent *hostInfo = gethostbyname(hostName);
+
+	if(hostInfo)
+		return string(inet_ntoa(*((in_addr *) hostInfo->h_addr)));
+	
+	return "";
+}
+
 string SystemInfo::getMemAvailable(const string &argument, boolean *dynamic)
 {
 	MEMORYSTATUS ms;
@@ -255,6 +295,48 @@ string SystemInfo::getOS(const string &argument, boolean *dynamic)
 		else
 			return "Windows NT";
 	}
+}
+
+string SystemInfo::getRandomLine(const string &argument, boolean *dynamic)
+{
+	FILE *fp = fopen(argument.c_str(), "r");
+	int lineCount = 0;
+	char lineBuffer[1024];
+
+	if(fp)
+	{
+		while(fgets(lineBuffer, 1024, fp))
+		{
+			if(lineBuffer[0] != '\n' && lineBuffer[0] != 0)
+				lineCount++;
+		}
+
+		int line = rand() % lineCount;
+
+		lineCount = 0;
+		fseek(fp, 0, SEEK_SET);
+
+		while(fgets(lineBuffer, 1024, fp))
+		{
+			if(lineBuffer[0] != '\n' && lineBuffer[0] != 0)
+			{
+				if(lineCount == line)
+				{
+					int length = strlen(lineBuffer);
+					if(lineBuffer[length - 1] == '\n') lineBuffer[length - 1] = 0;
+					fclose(fp);
+					return string(lineBuffer);
+				}
+
+				lineCount++;
+			}
+		}
+
+		fclose(fp);
+		return "[error]";
+	}
+
+	return "[Could not open file!]";
 }
 
 string SystemInfo::getSwapAvailable(const string &argument, boolean *dynamic)
@@ -339,6 +421,24 @@ string SystemInfo::formatByteSize(largeInt byteSize)
 	return string(buffer);
 }
 
+string SystemInfo::capitalize(const string &aString)
+{
+	string resultString;
+	
+	int length = aString.length();
+	int i = 0;
+	
+	while(i < length)
+	{
+		if(i == 0)
+			resultString.append(1, toupper(aString[i++]));
+		else
+			resultString.append(1, tolower(aString[i++]));
+	}
+	
+	return resultString;
+}
+
 string SystemInfo::lowerCase(const string &aString)
 {
 	string resultString;
@@ -350,6 +450,20 @@ string SystemInfo::lowerCase(const string &aString)
 		resultString.append(1, tolower(aString[i++]));
 	
 	return resultString;
+}
+
+string SystemInfo::trim(const string &aString)
+{
+	int start = 0;
+	int end = aString.length() - 1;
+	
+	while(start <= end && isspace(aString[start]))
+		start++;
+	
+	while(start <= end && isspace(aString[end]))
+		end--;
+	
+	return aString.substr(start, end - start + 1);
 }
 
 string SystemInfo::upperCase(const string &aString)

@@ -25,6 +25,7 @@ public:
 	int getX() const { return x; }
 	int getY() const { return y; }
 
+	int getUpdateInterval() { return updateInterval; }
 	int getJustify() const { return justify; }
 
 	int getLeftBorder() const { return leftBorder; }
@@ -40,6 +41,7 @@ public:
 	void setFont(Font *font);
 	void setJustify(int justify);
 	void setText(const string &text);
+	void setUpdateInterval(int updateInterval);
 	void setLeftBorder(int leftBorder);
 	void setTopBorder(int topBorder);
 	void setRightBorder(int rightBorder);
@@ -53,6 +55,8 @@ public:
 
 	void hide();
 	void show();
+
+	void update();
 
 private:
 
@@ -75,6 +79,7 @@ private:
 	int x;
 	int y;
 
+	int updateInterval;
 	int justify;
 
 	int leftBorder;

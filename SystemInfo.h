@@ -21,10 +21,13 @@ private:
 	string getComputerName(const string &argument, boolean *dynamic);
 	string getCPU(const string &argument, boolean *dynamic);
 	string getDate(const string &argument, boolean *dynamic);
+	string getHostName(const string &argument, boolean *dynamic);
+	string getIP(const string &argument, boolean *dynamic);
 	string getMemAvailable(const string &argument, boolean *dynamic);
 	string getMemInUse(const string &argument, boolean *dynamic);
 	string getMemTotal(const string &argument, boolean *dynamic);
 	string getOS(const string &argument, boolean *dynamic);
+	string getRandomLine(const string &argument, boolean *dynamic);
 	string getSwapAvailable(const string &argument, boolean *dynamic);
 	string getSwapInUse(const string &argument, boolean *dynamic);
 	string getSwapTotal(const string &argument, boolean *dynamic);
@@ -33,7 +36,9 @@ private:
 
 	string formatByteSize(largeInt byteSize);
 
+	string capitalize(const string &aString);
 	string lowerCase(const string &aString);
+	string trim(const string &aString);
 	string upperCase(const string &aString);
 };
 

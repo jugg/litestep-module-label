@@ -116,7 +116,7 @@ void SetTextBangCommand(HWND caller, const char *bangCommandName, const char *ar
 		char text[1024];
 		char *tokenBuffers[] = { text };
 
-		if(LCTokenize(arguments, tokenBuffers, 1, 0) == 1)
+		if(arguments && LCTokenize(arguments, tokenBuffers, 1, 0) == 1)
 			label->setText(text);
 		else
 			label->setText("");

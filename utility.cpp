@@ -210,9 +210,36 @@ StringList ParseNameList(const string &source)
 }
 
 // retrieve a list of names from step.rc
-StringList GetRCNameList(const string &prefix, const string &baseName, const string &defaultVal)
+StringList GetRCNameList(const string &prefix, const string &baseName)
 {
-	return ParseNameList(GetRCLine(prefix, baseName, defaultVal));
+	string name = prefix + baseName;
+	StringList resultList;
+	FILE *f;
+
+	if(f = LCOpen(0))
+	{
+		char lineBuffer[1024];
+
+		while(LCReadNextCommand(f, lineBuffer, 1024))
+		{
+			char *buffers[1];
+			char commandName[64];
+			char value[1024];
+
+			buffers[0] = commandName;
+			LCTokenize(lineBuffer, buffers, 1, value);
+
+			if(stricmp(commandName, name.c_str()) == 0)
+			{
+				StringList sl = ParseNameList(value);
+				resultList.insert(resultList.end(), sl.begin(), sl.end());
+			}
+		}
+
+		LCClose(f);
+	}
+
+	return resultList;
 }
 
 // retrieve a named value from step.rc
@@ -289,6 +316,127 @@ Texture *GetRCTexture(const string &prefix, const string &baseName)
 	}
 
 	return texture;
+}
+
+HDC hdcDesktop = 0;
+HBITMAP hbmDesktop = 0;
+
+// enhanced version of PaintDesktop
+void PaintDesktopEx(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, int xSrc, int ySrc, BOOL updateCache)
+{
+	if(hdcDesktop == 0 || updateCache)
+	{
+		if(hdcDesktop == 0 && hdcDest == 0)
+			return;
+
+		if(hbmDesktop != 0)
+		{
+			hbmDesktop = (HBITMAP) SelectObject(hdcDesktop, hbmDesktop);
+			DeleteObject(hbmDesktop);
+			hbmDesktop = 0;
+		}
+
+		HDC hdcScreen = GetDC(0);
+
+		if(hdcDesktop == 0)
+		{
+			hdcDesktop = CreateCompatibleDC(hdcScreen);
+		}
+		
+		int cxDesktop = GetSystemMetrics(SM_CXSCREEN);
+		int cyDesktop = GetSystemMetrics(SM_CYSCREEN);
+
+		hbmDesktop = CreateCompatibleBitmap(hdcScreen, cxDesktop, cyDesktop);
+		hbmDesktop = (HBITMAP) SelectObject(hdcDesktop, hbmDesktop);
+
+		RECT r;
+		SetRect(&r, 0, 0, cxDesktop, cyDesktop);
+		FillRect(hdcDesktop, &r, GetSysColorBrush(COLOR_DESKTOP));
+
+		char wallpaper[MAX_PATH] = { 0 };
+
+		RegQueryStringValue(HKEY_CURRENT_USER,
+			"Control Panel\\Desktop", "Wallpaper", wallpaper,
+			MAX_PATH, "");
+
+		if(wallpaper[0])
+		{
+			int wallpaperStyle;
+			int tileWallpaper;
+
+			char buffer[32];
+
+			RegQueryStringValue(HKEY_CURRENT_USER, "Control Panel\\Desktop", "WallpaperStyle", buffer, 32, "0");
+			wallpaperStyle = atoi(buffer);
+
+			RegQueryStringValue(HKEY_CURRENT_USER, "Control Panel\\Desktop", "TileWallpaper", buffer, 32, "0");
+			tileWallpaper = atoi(buffer);
+
+			HBITMAP hbmWallpaper = (HBITMAP) LoadImage(0, wallpaper,
+				IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+			if(hbmWallpaper)
+			{
+				BITMAP bm;
+				GetObject(hbmWallpaper, sizeof(BITMAP), &bm);
+
+				int cxWallpaper = bm.bmWidth;
+				int cyWallpaper = bm.bmHeight;
+
+				HDC hdcWallpaper = CreateCompatibleDC(hdcScreen);
+				hbmWallpaper = (HBITMAP) SelectObject(hdcWallpaper, hbmWallpaper);
+
+				if(tileWallpaper)
+				{
+					TileBlt(hdcDesktop,
+						0, 0,
+						cxDesktop, cyDesktop,
+						hdcWallpaper,
+						0, 0,
+						cxWallpaper, cyWallpaper,
+						SRCCOPY);
+				}
+				else
+				{
+					if(wallpaperStyle == 2) // stretch
+					{
+						SetStretchBltMode(hdcDesktop, STRETCH_DELETESCANS);
+
+						StretchBlt(hdcDesktop,
+							0, 0,
+							cxDesktop, cyDesktop,
+							hdcWallpaper,
+							0, 0,
+							cxWallpaper, cyWallpaper,
+							SRCCOPY);
+					}
+					else
+					{
+						BitBlt(hdcDesktop,
+						(cxDesktop - cxWallpaper) / 2,
+						(cyDesktop - cyWallpaper) / 2,
+						cxWallpaper, cyWallpaper,
+						hdcWallpaper,
+						0, 0,
+						SRCCOPY);
+					}
+				}
+
+				hbmWallpaper = (HBITMAP) SelectObject(hdcWallpaper, hbmWallpaper);
+				DeleteDC(hdcWallpaper);
+
+				DeleteObject(hbmWallpaper);
+			}
+		}
+
+		ReleaseDC(0, hdcScreen);
+	}
+
+	if(hdcDest)
+	{
+		BitBlt(hdcDest, xDest, yDest, cxDest, cyDest,
+			hdcDesktop, xSrc, ySrc, SRCCOPY);
+	}
 }
 
 // tile an image horizontally and vertically
@@ -588,4 +736,37 @@ void MultiBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdc
 				rasterOp);
 		}
 	}
+}
+
+// retrieve a string value from the registry
+LPTSTR RegQueryStringValue(HKEY hKey, LPCTSTR pszSubKey, LPCTSTR pszValueName, LPTSTR pszBuffer, int nBufferSize, LPTSTR pszDefaultValue)
+{
+	DWORD dwDataType;
+	DWORD dwDataSize = (DWORD) nBufferSize;
+	HKEY hSubKey = NULL;
+	LONG lErrorCode;
+	
+	if(pszSubKey)
+	{
+		lErrorCode = RegOpenKeyEx(hKey, pszSubKey, 0, KEY_QUERY_VALUE, &hSubKey);
+		
+		if(lErrorCode != ERROR_SUCCESS)
+		{
+			lstrcpyn(pszBuffer, pszDefaultValue, nBufferSize);
+			return pszBuffer;
+		}
+		
+		hKey = hSubKey;
+	}
+	
+	lErrorCode = RegQueryValueEx(hKey, pszValueName, NULL, &dwDataType,
+		(LPBYTE) pszBuffer, &dwDataSize);
+	
+	if(hSubKey)
+		RegCloseKey(hSubKey);
+		
+	if(dwDataType != REG_SZ || lErrorCode != ERROR_SUCCESS)
+		lstrcpyn(pszBuffer, pszDefaultValue, nBufferSize);
+	
+	return pszBuffer;
 }
