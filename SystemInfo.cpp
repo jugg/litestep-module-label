@@ -336,7 +336,7 @@ string SystemInfo::getDate(const vector<string> &arguments, boolean *dynamic)
 	{
 		SYSTEMTIME st;
 		GetLocalTime(&st);
-		return formatDateTime(arguments[0], st);
+		return formatDateTime(arguments[0], st, 0);
 	}
 	else
 	{
@@ -538,7 +538,7 @@ string SystemInfo::getTime(const vector<string> &arguments, boolean *dynamic)
 	{
 		SYSTEMTIME st;
 		GetLocalTime(&st);
-		return formatDateTime(arguments[0], st);
+		return formatDateTime(arguments[0], st, 0);
 	}
 	else
 	{
@@ -574,7 +574,7 @@ string SystemInfo::getUptime(const vector<string> &arguments, boolean *dynamic)
 	st.wMilliseconds = ms;
 
 	string format = (arguments.size() >= 1) ? arguments[0] : "d days hh:nn:ss";
-	return formatDateTime(format, st);
+	return formatDateTime(format, st, 1);
 }
 
 string SystemInfo::getUserName(boolean *dynamic)
@@ -781,10 +781,10 @@ string SystemInfo::formatByteSize(largeInt byteSize)
 
 static inline int isSequenceChar(int ch)
 {
-	return (ch == 'd' || ch == 'm' || ch == 'y' || ch == 'h' || ch == 'n' || ch == 's');
+	return (ch == 'd' || ch == 'm' || ch == 'y' || ch == 'h' || ch == 'i' || ch == 'n' || ch == 's');
 }
 
-string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st)
+string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st, int span)
 {
 	const char *formatPtr = format.c_str();
 	string output;
@@ -861,6 +861,8 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st)
 					
 					case 'm':
 					{
+						if(span) break;
+
 						switch(count)
 						{
 							case 1:
@@ -907,6 +909,8 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st)
 					
 					case 'y':
 					{
+						if(span) break;
+
 						if(count == 2 || count == 4)
 						{
 							char temp[8];
@@ -926,8 +930,24 @@ string SystemInfo::formatDateTime(const string &format, const SYSTEMTIME &st)
 						if(count == 1 || count == 2)
 						{
 							char temp[8];
-							int hour = (st.wHour > 12) ? st.wHour - 12 : st.wHour;
+							int hour = span ? st.wHour : (st.wHour == 0) ? 12 : (st.wHour > 12) ? st.wHour - 12 : st.wHour;
 							sprintf(temp, (count == 1) ? "%d" : "%02d", hour);
+							output.append(temp);
+						}
+						else
+						{
+							output.append(count, sequenceChar);
+						}
+						
+						break;
+					}
+					
+					case 'i':
+					{
+						if(count == 1 || count == 2)
+						{
+							char temp[8];
+							sprintf(temp, (count == 1) ? "%d" : "%02d", st.wHour);
 							output.append(temp);
 						}
 						else

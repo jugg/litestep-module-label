@@ -56,7 +56,7 @@ private:
 	void getDiskFreeSpace(const string &drive, largeInt &freeBytes, largeInt &totalBytes);
 
 	string formatByteSize(largeInt byteSize);
-	string formatDateTime(const string &format, const SYSTEMTIME &st);
+	string formatDateTime(const string &format, const SYSTEMTIME &st, int span);
 
 	char *getLocaleInfo(LCTYPE type);
 
