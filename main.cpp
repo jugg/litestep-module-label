@@ -15,7 +15,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			strcpy((char *) lParam, "Label 1.6 (Maduin)");
+			strcpy((char *) lParam, "Label 1.61 (Maduin)");
 			return strlen((char *) lParam);
 		}
 
@@ -121,7 +121,7 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 
 	for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
 	{
-		if(!GetRCBoolean(*it, "DockToBox"))
+		if(!GetRCBoolean(*it, "LSBoxName"))
 		{
 			Label *label = new Label(*it);
 			label->load(hInstance);
@@ -145,7 +145,7 @@ int initWharfModule(HWND hParent, HINSTANCE hInstance, void *pv)
 
 		for(StringListIterator it = labelNames.begin(); it != labelNames.end(); it++)
 		{
-			string dockToBox = GetRCString(*it, "DockToBox", "");
+			string dockToBox = GetRCString(*it, "LSBoxName", "");
 
 			if(stricmp(boxName, dockToBox.c_str()) == 0)
 			{

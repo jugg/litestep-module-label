@@ -1,3 +1,6 @@
+1.61, 05-28-2001
+- bugfix: LSBox support now actually works! =)
+
 1.6, 05-28-2001
 - added AllLabels support
 - added LSBox compatibility

@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-                                Label 1.6
+                                Label 1.61
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                         Last Modified: 05-28-2001
 --------------------------------------------------------------------------
@@ -163,7 +163,7 @@ Sets the amount of time in milliseconds between updates for labels that
 contain dynamically updated content. If no value is provided then the
 default is 1000 (1 second).
 
-LabelDockToBox <name>
+LabelLSBoxName <name>
 Sets the name of the box (lsbox.dll) that this label should be loaded
 into. The default is no value in which case the label is loaded normally.
 See the section below entitled 'Using Labels inside LSBox' for more
@@ -366,6 +366,9 @@ Host name assigned to this computer.
 
 ip
 Internet Procotol (IP) address assigned to this computer.
+
+iTime
+Current time as Swatch internet time (beats).
 
 memAvailable
 Amount of physical memory currently available.

@@ -118,6 +118,10 @@ SOURCE=.\Label.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\LabelSettings.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
@@ -163,6 +167,10 @@ SOURCE=.\ImageTexture.h
 # Begin Source File
 
 SOURCE=.\Label.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LabelSettings.h
 # End Source File
 # Begin Source File
 
