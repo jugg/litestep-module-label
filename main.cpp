@@ -16,7 +16,7 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 	{
 		case LM_GETREVID:
 		{
-			strcpy((char *) lParam, "Label 1.2 (Maduin)");
+			strcpy((char *) lParam, "Label 1.4 (Maduin)");
 			return strlen((char *) lParam);
 		}
 

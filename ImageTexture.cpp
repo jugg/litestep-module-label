@@ -23,8 +23,10 @@ NameValuePair modeConstants[] =
 {
 	{ "stretch", MULTIBLT_STRETCH },
 	{ "tile", MULTIBLT_TILE },
-	{ "tileHorizontal", MULTIBLT_TILEHORIZONTAL },
-	{ "tileVertical", MULTIBLT_TILEVERTICAL },
+	{ "tile-horizontal", MULTIBLT_TILEHORIZONTAL },
+	{ "tile-vertical", MULTIBLT_TILEVERTICAL },
+	{ "tilehorizontal", MULTIBLT_TILEHORIZONTAL },
+	{ "tilevertical", MULTIBLT_TILEVERTICAL },
 	{ 0, 0 }
 };
 

@@ -21,6 +21,9 @@ private:
 	string getComputerName(const string &argument, boolean *dynamic);
 	string getCPU(const string &argument, boolean *dynamic);
 	string getDate(const string &argument, boolean *dynamic);
+	string getDiskAvailable(const string &argument, boolean *dynamic);
+	string getDiskInUse(const string &argument, boolean *dynamic);
+	string getDiskTotal(const string &argument, boolean *dynamic);
 	string getHostName(const string &argument, boolean *dynamic);
 	string getIP(const string &argument, boolean *dynamic);
 	string getMemAvailable(const string &argument, boolean *dynamic);
@@ -35,6 +38,7 @@ private:
 	string getUserName(const string &argument, boolean *dynamic);
 
 	string formatByteSize(largeInt byteSize);
+	void getDiskFreeSpace(const string &drive, largeInt &freeBytes, largeInt &totalBytes);
 
 	string capitalize(const string &aString);
 	string lowerCase(const string &aString);

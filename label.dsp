@@ -192,6 +192,10 @@ SOURCE=.\utility.h
 
 SOURCE=.\changes.txt
 # End Source File
+# Begin Source File
+
+SOURCE=.\readme.txt
+# End Source File
 # End Group
 # End Target
 # End Project

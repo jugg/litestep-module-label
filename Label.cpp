@@ -212,8 +212,8 @@ void Label::move(int x, int y)
 
 	if(hWnd != 0)
 	{
-		SetWindowPos(hWnd, 0, x, y, width, height,
-			SWP_NOACTIVATE | SWP_NOZORDER);
+		SetWindowPos(hWnd, 0, x, y, 0, 0,
+			SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
 	}
 }
 
@@ -238,8 +238,8 @@ void Label::resize(int width, int height)
 
 	if(hWnd != 0)
 	{
-		SetWindowPos(hWnd, 0, x, y, width, height,
-			SWP_NOACTIVATE | SWP_NOZORDER);
+		SetWindowPos(hWnd, 0, 0, 0, width, height,
+			SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
 	}
 }
 
@@ -286,6 +286,7 @@ void Label::show()
 			hInstance,
 			this);
 
+		SetWindowLong(hWnd, GWL_USERDATA, 0x49474541);
 		setAlwaysOnTop(alwaysOnTop);
 		if(dynamicText) SetTimer(hWnd, TIMER_UPDATE, updateInterval, 0);
 	}
@@ -521,6 +522,11 @@ void Label::onTimer(int timerID)
 	}
 }
 
+void Label::onWindowPosChanged(WINDOWPOS *windowPos)
+{
+	repaint(true);
+}
+
 boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
 	switch(message)
@@ -613,6 +619,12 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			onTimer((int) wParam);
 			return true;
+		}
+
+		case WM_WINDOWPOSCHANGED:
+		{
+			onWindowPosChanged((WINDOWPOS *) lParam);
+			return false;
 		}
 	}
 

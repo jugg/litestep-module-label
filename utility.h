@@ -27,7 +27,9 @@ void ModifyStyle(HWND hWnd, DWORD removeStyle, DWORD addStyle);
 
 boolean GetRCBoolean(const string &prefix, const string &baseName);
 int GetRCColor(const string &prefix, const string &baseName, int defaultVal);
-int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int wrapVal);
+int ParseCoordinate(const string &aString, int defaultVal, int maxVal);
+int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal);
+int ParseDimension(const string &aString, int defaultVal, int maxVal);
 int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal);
 Font *GetRCFont(const string &prefix, const string &baseName);
 int GetRCInt(const string &prefix, const string &baseName, int defaultVal, int minVal = MIN_INTEGER, int maxVal = MAX_INTEGER);

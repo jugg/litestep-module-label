@@ -5,6 +5,21 @@
 #include "BlankTexture.h"
 #include "ImageTexture.h"
 
+// trim leading and trailing whitespace
+string trim(const string &toTrim)
+{
+	int start = 0;
+	int end = toTrim.length() - 1;
+	
+	while(start <= end && isspace(toTrim[start]))
+		start++;
+	
+	while(start <= end && isspace(toTrim[end]))
+		end--;
+	
+	return toTrim.substr(start, end - start + 1);
+}
+
 // retrieve handle of the desktop window
 HWND GetLitestepDesktop()
 {
@@ -60,12 +75,10 @@ int GetRCColor(const string &prefix, const string &baseName, int defaultVal)
 	return GetRCColor(name.c_str(), defaultVal);
 }
 
-// retrieve a coordinate from step.rc, accounting for negative values and centering
-int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal)
+// parse a coordinate specification
+int ParseCoordinate(const string &aString, int defaultVal, int maxVal)
 {
-	string strVal = GetRCString(prefix, baseName, "");
-	int start = strVal.find_first_not_of(" \t");
-	if(start < strVal.length()) strVal = strVal.substr(start);
+	string strVal = trim(aString);
 
 	if(strVal.length() == 0)
 		return defaultVal;
@@ -117,12 +130,17 @@ int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal
 	return value;
 }
 
-// retrieve a dimension (absolute value or percentage) from step.rc
-int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal)
+// retrieve a coordinate from step.rc, accounting for negative values and centering
+int GetRCCoordinate(const string &prefix, const string &baseName, int defaultVal, int maxVal)
 {
 	string strVal = GetRCString(prefix, baseName, "");
-	int start = strVal.find_first_not_of(" \t");
-	if(start < strVal.length()) strVal = strVal.substr(start);
+	return ParseCoordinate(strVal, defaultVal, maxVal);
+}
+
+// parse a dimension
+int ParseDimension(const string &aString, int defaultVal, int maxVal)
+{
+	string strVal = trim(aString);
 
 	if(strVal.length() == 0)
 		return defaultVal;
@@ -162,6 +180,13 @@ int GetRCDimension(const string &prefix, const string &baseName, int defaultVal,
 		value = maxVal - value;
 
 	return value;
+}
+
+// retrieve a dimension (absolute value or percentage) from step.rc
+int GetRCDimension(const string &prefix, const string &baseName, int defaultVal, int maxVal)
+{
+	string strVal = GetRCString(prefix, baseName, "");
+	return ParseDimension(strVal, defaultVal, maxVal);
 }
 
 // retrieve a font from step.rc

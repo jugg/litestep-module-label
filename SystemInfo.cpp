@@ -85,6 +85,12 @@ string SystemInfo::evaluateFunction(const string &functionName, const string &ar
 		return getCPU(argument, dynamic);
 	else if(name == "date")
 		return getDate(argument, dynamic);
+	else if(name == "diskavailable")
+		return getDiskAvailable(argument, dynamic);
+	else if(name == "diskinuse")
+		return getDiskInUse(argument, dynamic);
+	else if(name == "disktotal")
+		return getDiskTotal(argument, dynamic);
 	else if(name == "hostname")
 		return getHostName(argument, dynamic);
 	else if(name == "ip")
@@ -219,6 +225,39 @@ string SystemInfo::getDate(const string &argument, boolean *dynamic)
 	return string(buffer);
 }
 
+string SystemInfo::getDiskAvailable(const string &argument, boolean *dynamic)
+{
+	largeInt freeBytes;
+	largeInt totalBytes;
+
+	getDiskFreeSpace(argument, freeBytes, totalBytes);
+	
+	if(dynamic) *dynamic = true;
+	return formatByteSize(freeBytes);
+}
+
+string SystemInfo::getDiskInUse(const string &argument, boolean *dynamic)
+{
+	largeInt freeBytes;
+	largeInt totalBytes;
+
+	getDiskFreeSpace(argument, freeBytes, totalBytes);
+	
+	if(dynamic) *dynamic = true;
+	return formatByteSize(totalBytes - freeBytes);
+}
+
+string SystemInfo::getDiskTotal(const string &argument, boolean *dynamic)
+{
+	largeInt freeBytes;
+	largeInt totalBytes;
+
+	getDiskFreeSpace(argument, freeBytes, totalBytes);
+	
+	if(dynamic) *dynamic = true;
+	return formatByteSize(totalBytes);
+}
+
 string SystemInfo::getHostName(const string &argument, boolean *dynamic)
 {
 	char hostName[256];
@@ -311,6 +350,7 @@ string SystemInfo::getRandomLine(const string &argument, boolean *dynamic)
 				lineCount++;
 		}
 
+		srand(GetTickCount());
 		int line = rand() % lineCount;
 
 		lineCount = 0;
@@ -419,6 +459,48 @@ string SystemInfo::formatByteSize(largeInt byteSize)
 		wsprintf(buffer, "%d %s", (int) quotient, units[i]);
 
 	return string(buffer);
+}
+
+void SystemInfo::getDiskFreeSpace(const string &drive, largeInt &freeBytes, largeInt &totalBytes)
+{
+	static BOOL (WINAPI *pfnGetDiskFreeSpaceEx)(LPCSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
+	static BOOL fChecked = FALSE;
+
+	if(!fChecked)
+	{
+		pfnGetDiskFreeSpaceEx = (BOOL (WINAPI *)(LPCSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER)) GetProcAddress(
+			GetModuleHandle("KERNEL32.DLL"), "GetDiskFreeSpaceExA");
+
+		fChecked = TRUE;
+	}
+
+	if(pfnGetDiskFreeSpaceEx)
+	{
+		largeInt dummy;
+
+		pfnGetDiskFreeSpaceEx(drive.c_str(),
+			(PULARGE_INTEGER) &freeBytes,
+			(PULARGE_INTEGER) &totalBytes,
+			(PULARGE_INTEGER) &dummy);
+	}
+	else
+	{
+		DWORD sectorsPerCluster;
+		DWORD bytesPerSector;
+		DWORD freeClusters;
+		DWORD totalClusters;
+
+		GetDiskFreeSpace(drive.c_str(),
+			&sectorsPerCluster,
+			&bytesPerSector,
+			&freeClusters,
+			&totalClusters);
+
+		largeInt bytesPerCluster = (largeInt) bytesPerSector * (largeInt) sectorsPerCluster;
+
+		freeBytes = (largeInt) freeClusters * bytesPerCluster;
+		totalBytes = (largeInt) totalClusters * bytesPerCluster;
+	}
 }
 
 string SystemInfo::capitalize(const string &aString)

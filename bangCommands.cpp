@@ -9,21 +9,27 @@ void AlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char
 void HideBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void MoveBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void PinToDesktopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void RepositionBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void ResizeBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void SetTextBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ShowBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ToggleAlwaysOnTopBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ToggleBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
+void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 
 // bang commands implemented by this module
 struct { const char *name; BangCommandEx *function; } bangCommands[] = {
 	{ "!%sAlwaysOnTop", AlwaysOnTopBangCommand },
 	{ "!%sHide", HideBangCommand },
-	// { "!%sMove", MoveBangCommand },
+	{ "!%sMove", MoveBangCommand },
 	{ "!%sPinToDesktop", PinToDesktopBangCommand },
+	{ "!%sReposition", RepositionBangCommand },
+	{ "!%sResize", ResizeBangCommand },
 	{ "!%sSetText", SetTextBangCommand },
 	{ "!%sShow", ShowBangCommand },
 	{ "!%sToggleAlwaysOnTop", ToggleAlwaysOnTopBangCommand },
-	{ "!%sToggle", ToggleBangCommand }
+	{ "!%sToggle", ToggleBangCommand },
+	{ "!%sUpdate", UpdateBangCommand }
 };
 
 const int bangCommandCount = sizeof(bangCommands) / sizeof(bangCommands[0]);
@@ -85,11 +91,8 @@ void MoveBangCommand(HWND caller, const char *bangCommandName, const char *argum
 
 		if(LCTokenize(arguments, tokenBuffers, 2, 0) == 2)
 		{
-			int x = atoi(xCoord);
-			int y = atoi(yCoord);
-
-			if(x < 0) x = x + GetSystemMetrics(SM_CXSCREEN);
-			if(y < 0) y = y + GetSystemMetrics(SM_CYSCREEN);
+			int x = ParseCoordinate(xCoord, 0, GetSystemMetrics(SM_CXSCREEN));
+			int y = ParseCoordinate(yCoord, 0, GetSystemMetrics(SM_CYSCREEN));
 
 			label->move(x, y);
 		}
@@ -103,6 +106,56 @@ void PinToDesktopBangCommand(HWND caller, const char *bangCommandName, const cha
 	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 13));
 
 	if(label != 0) label->setAlwaysOnTop(false);
+}
+
+// reposition (move and resize) a label
+void RepositionBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 11));
+
+	if(label != 0)
+	{
+		char xCoord[16];
+		char yCoord[16];
+		char xSize[16];
+		char ySize[16];
+
+		char *tokenBuffers[] = { xCoord, yCoord, xSize, ySize };
+
+		if(LCTokenize(arguments, tokenBuffers, 4, 0) == 4)
+		{
+			int x = ParseCoordinate(xCoord, 0, GetSystemMetrics(SM_CXSCREEN));
+			int y = ParseCoordinate(yCoord, 0, GetSystemMetrics(SM_CYSCREEN));
+			int width = ParseDimension(xSize, 0, GetSystemMetrics(SM_CXSCREEN));
+			int height = ParseDimension(ySize, 0, GetSystemMetrics(SM_CYSCREEN));
+
+			label->reposition(x, y, width, height);
+		}
+	}
+}
+
+// resize a label
+void ResizeBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 7));
+
+	if(label != 0)
+	{
+		char xSize[16];
+		char ySize[16];
+
+		char *tokenBuffers[] = { xSize, ySize };
+
+		if(LCTokenize(arguments, tokenBuffers, 2, 0) == 2)
+		{
+			int width = ParseDimension(xSize, 0, GetSystemMetrics(SM_CXSCREEN));
+			int height = ParseDimension(ySize, 0, GetSystemMetrics(SM_CYSCREEN));
+
+			label->resize(width, height);
+		}
+	}
 }
 
 // set a label's text
@@ -149,3 +202,13 @@ void ToggleBangCommand(HWND caller, const char *bangCommandName, const char *arg
 
 	if(label != 0) label->isVisible() ? label->hide() : label->show();
 }
+
+// update the label's contents
+void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arguments)
+{
+	string labelName = string(bangCommandName);
+	Label *label = lookupLabel(labelName.substr(1, labelName.length() - 7));
+
+	if(label != 0) label->update();
+}
+

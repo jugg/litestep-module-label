@@ -124,6 +124,7 @@ protected:
 	virtual void onPaint(HDC hDC);
 	virtual void onSize(int width, int height);
 	virtual void onTimer(int timerID);
+	virtual void onWindowPosChanged(WINDOWPOS *windowPos);
 
 	virtual boolean onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
 

@@ -1,0 +1,55 @@
+1.4, 04-04-2001
+- added !LabelMove, !LabelReposition, and !LabelResize
+- added !LabelUpdate
+- added the following sysinfo functions
+	- diskAvailable('drive')
+	- diskInUse('drive')
+	- diskTotal('drive')
+- updated the documentation and converted it to plain text
+- bugfix: labels are now hidden from the VWM
+- known issue: might not work in PureLS -- I need bug reports
+
+1.3, 03-02-2001
+- added support for multiple "Labels" commands
+- added the following sysinfo functions
+	- hostName
+	- IP
+	- randomLine('file')
+- added the following support functions
+	- capitalize(x)
+	- trim(x)
+- added LabelUpdateInterval: number of milliseconds between updates
+- fixed various transparency issues
+- known issue: if one item in a label autoupdates, the whole label
+  will do so, so don't mix stuff like randomLine with CPU/mem, etc.
+- again I haven't updated the docs... next time, I promise! =)
+
+1.2, 02-05-2001
+- added support for system info in labels. just put the name of the info you want inside brackets ("The time is [time]")
+	- activeTask (title of the currently active task)
+	- computerName
+	- cpu
+	- date
+	- memAvailable
+	- memInUse
+	- memTotal
+	- os
+	- swapAvailable
+	- swapInUse
+	- swapTotal
+	- time
+	- userName
+- added support for functions to modify sysinfo ("[lowerCase(computerName)]")
+	- lowerCase(x)
+	- upperCase(x)
+- known issue: [cpu] doesn't work on NT/2K yet
+- known issue: documentation is out of date
+- bugfix: doesn't crash under PureLS anymore
+
+1.1, 01-25-2001
+- added support for center-relative coordinates, like shortcut2 (16c, -200c)
+- added transparency support (LabelTransparent)
+- improved/fixed painting code
+- fixed documentation: missing LabelLeftBorder, etc.
+- bugfix: if the skin bitmap file wasn't found, LS could hang
+- bugfix: LabelJustify now actually works
