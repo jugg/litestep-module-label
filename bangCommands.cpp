@@ -76,6 +76,38 @@ void CreateLabelBangCommand(HWND caller, const char *arguments)
 	labelList.insert(labelList.end(), label);
 }
 
+//LsBox BangHook support by blkhawk
+void LsBoxHookBangCommand(HWND caller, const char *arguments)
+{
+	char labelName[MAX_LINE_LENGTH];
+	LPCTSTR nextToken[MAX_LINE_LENGTH];
+
+	GetToken(arguments,labelName,nextToken,false);
+
+	//check if the label is already running
+	Label *label = lookupLabel(labelName);
+
+    if (label == 0) 
+	{
+		label = new Label(labelName);
+		label->load(hInstance);
+		labelList.insert(labelList.end(), label);
+	}
+
+	char *handle = strrchr(arguments,' ');
+
+	if ((label != 0)&&(handle))
+		{
+			HWND boxWnd = (HWND)atoi(handle+1);
+			if (boxWnd) 
+			{
+				label->setBox(boxWnd);
+				label->show();
+				label->update();
+			}
+		}
+}
+
 // display label debugging info
 void DebugBangCommand(HWND caller, const char *arguments)
 {

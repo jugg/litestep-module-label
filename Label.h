@@ -39,6 +39,7 @@ public:
 	const string &getText() const { return text; }
 
 	void setAlwaysOnTop(boolean alwaysOnTop);
+	void setBox(HWND newparent);
 	void setBackground(Texture *background);
 	void setFont(Font *font);
 	void setJustify(int justify);

@@ -1,3 +1,6 @@
+1.92, 01-30-2002 (Sci)
+- added support for lsbox (merged code by blkhawk from 1.8a)
+
 1.91, 01-16-2002 (Sci)
 - added !LabelClipboard
 

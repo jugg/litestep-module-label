@@ -149,6 +149,17 @@ void Label::setAlwaysOnTop(boolean alwaysOnTop)
 	}
 }
 
+void Label::setBox(HWND newparent)
+{
+	if (this->alwaysOnTop) this->setAlwaysOnTop(FALSE);
+	
+	this->box = newparent;
+
+	SetWindowLong(hWnd, GWL_STYLE, (GetWindowLong(hWnd, GWL_STYLE) &~ WS_POPUP)|WS_CHILD);
+	SetParent(hWnd, newparent);
+//	SetWindowLong(hWnd, GWL_STYLE, (GetWindowLong(hWnd, GWL_STYLE) &~ WS_CHILD)|WS_POPUP);
+}
+
 void Label::setBackground(Texture *background)
 {
 	if(this->background != defaultSettings.skin)
@@ -587,10 +598,14 @@ boolean Label::onWindowMessage(UINT message, WPARAM wParam, LPARAM lParam, LRESU
 		{
 			if(box)
 			{
-				SetWindowLong(hWnd, 0, 0);
-				hWnd = 0;
+				//hide or destroy is the Question - i take hide - blkhawk
+				this->hide();
+				this->setBox(0);
+
+				//Uncomment these to destroy the Label when the parent box gets killed
+				/*hWnd = 0;
 				labelList.remove(this);
-				delete this;
+				delete this;*/
 			}
 
 			return false;

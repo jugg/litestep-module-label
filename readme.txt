@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------
-                                Label 1.91
+                                Label 1.92
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
-                        Last Modified: 01-16-2002
+                        Last Modified: 01-30-2002
 --------------------------------------------------------------------------
 
 Overview
@@ -584,28 +584,17 @@ LabelThreeFontColor 255 255 255
 Using Labels inside LSBox
 -------------------------
 
-As of version 1.61, label.dll is compatible with BlkHawk's LSBox module
-for Litestep. BlkHawk also released a modification of label for use with
-LSBox and my code is based on his, however my code adds the LabelLSBoxName
-setting (which is required if the label is to be loaded into a box). This
-way you can have labels in multiple boxes as well as outside of boxes.
+As of version 1.92 label.dll supports the new *ModuleHook LSBox interface.
+To load a label into a box add a line like the following to your .box file.
 
-In order to get labels inside of a box first add a line like the following
-to the .box file (adjusting the path to label.dll if needed):
+*ModuleHook !LabelLsBoxHook <name of the label>
 
-*Module label.dll
+It works like !LabelCreate, in other words all the labeol settings are
+stored in the .rc file.
 
-Then for each label that you wish to put in that box, add a LSBoxName
-setting giving the name of the box (LSBoxName setting in the .box file).
-For example, to load a label named MyLabel inside a box named MyBox:
+You can use labels both inside and outside of boxes.
 
-MyLabelLSBoxName MyBox
-
-When a label is loaded inside of a box the position (LabelX/Y) are
-relative to the upper-left corner of the box. For now negative coordinates
-and center-relative coordinates do not work inside a box. Also, label.dll
-must be loaded via a LoadModule command in step.rc even if labels are only
-used from within boxes.
+Label.dll has to be loaded before the box is created.
 
 
 Disclaimer

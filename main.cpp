@@ -118,6 +118,8 @@ int initModuleEx(HWND hParent, HINSTANCE hInstance, const char *lsPath)
 
 	AddBangCommand("!LabelCreate", CreateLabelBangCommand);
 	AddBangCommand("!LabelDebug", DebugBangCommand);
+	//LsBox Support - blkhawk
+	AddBangCommand("!LabelLsBoxHook", LsBoxHookBangCommand);
 
 	initialized = true;
 	return 0;

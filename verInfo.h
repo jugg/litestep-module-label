@@ -2,7 +2,7 @@
 #define __VERINFO_H
 
 #define V_NAME "Label"
-#define V_VERSION "1.91"
-#define V_AUTHOR "Maduin/Sci"
+#define V_VERSION "1.92"
+#define V_AUTHOR "Maduin/Sci/blkhawk"
 
 #endif
