@@ -1,3 +1,9 @@
+1.98, 12-09-2002 (ilmcuts)
+- fixed memory leak (thanks xnowfall)
+- set charset to DEFAULT_CHARSET, should fix problems with e.g. eastern
+  european fonts.
+- added support for tabs in LabelText
+
 1.97, 10-03-2002 (ilmcuts, wols)
 - fixed Indie LS dependency
 - fixed !labelclipboard inserting random characters if used without parameters

@@ -649,7 +649,7 @@ void Label::onPaint(HDC hDC)
 			width - leftBorder - rightBorder,
 			height - topBorder - bottomBorder,
 			text,
-			justify /* | DT_SINGLELINE */ | DT_VCENTER | DT_NOPREFIX);
+			justify /* | DT_SINGLELINE */ | DT_VCENTER | DT_NOPREFIX | DT_EXPANDTABS);
 	}
 	else
 	{
@@ -701,7 +701,7 @@ void Label::onPaint(HDC hDC)
 			scrollPosition - scrollPadLength,
 			height - topBorder - bottomBorder,
 			text,
-			DT_RIGHT | DT_VCENTER | DT_NOPREFIX);
+			DT_RIGHT | DT_VCENTER | DT_NOPREFIX | DT_EXPANDTABS);
 
 		font->apply(bufferDC,
 			scrollPosition + leftBorder,
@@ -709,7 +709,7 @@ void Label::onPaint(HDC hDC)
 			textWidth,
 			height - topBorder - bottomBorder,
 			text,
-			DT_LEFT | DT_VCENTER | DT_NOPREFIX);
+			DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_EXPANDTABS);
 
 		SelectClipRgn(bufferDC, oldRGN);
 		DeleteObject(oldRGN);

@@ -84,6 +84,8 @@ void Font::measure(HDC hDC, const string &text, unsigned int flags, long *width,
 
 	*width=lpsize->cx;
 	*height=lpsize->cy;
+
+    delete lpsize;
 }
 
 void Font::setColor(int aColor)
@@ -100,6 +102,7 @@ void Font::createHandle()
 	lf.lfHeight = height;
 	lf.lfItalic = italic ? TRUE : FALSE;
 	lf.lfWeight = bold ? FW_BOLD : FW_NORMAL;
+    lf.lfCharSet = DEFAULT_CHARSET;
 
 	if(hFont != 0)
 		DeleteObject(hFont);

@@ -1,9 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.97
+                                Label 1.98
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
                         ilmcuts <ilmcuts@gmx.net>
-                        Last Modified: 10-03-2002
+                        Last Modified: 12-09-2002
 --------------------------------------------------------------------------
 
 Overview
