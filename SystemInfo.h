@@ -26,15 +26,15 @@ private:
 	string getUptime(const vector<string> &arguments, boolean *dynamic);
 
 	// memory and disk space info
-	string getDiskAvailable(const string &drive, boolean *dynamic);
-	string getDiskInUse(const string &drive, boolean *dynamic);
-	string getDiskTotal(const string &drive, boolean *dynamic);
-	string getMemAvailable(boolean *dynamic);
-	string getMemInUse(boolean *dynamic);
-	string getMemTotal(boolean *dynamic);
-	string getSwapAvailable(boolean *dynamic);
-	string getSwapInUse(boolean *dynamic);
-	string getSwapTotal(boolean *dynamic);
+	string getDiskAvailable(const vector<string> &arguments, boolean *dynamic);
+	string getDiskInUse(const vector<string> &arguments, boolean *dynamic);
+	string getDiskTotal(const vector<string> &arguments, boolean *dynamic);
+	string getMemAvailable(const vector<string> &arguments, boolean *dynamic);
+	string getMemInUse(const vector<string> &arguments, boolean *dynamic);
+	string getMemTotal(const vector<string> &arguments, boolean *dynamic);
+	string getSwapAvailable(const vector<string> &arguments, boolean *dynamic);
+	string getSwapInUse(const vector<string> &arguments, boolean *dynamic);
+	string getSwapTotal(const vector<string> &arguments, boolean *dynamic);
 
 	// power info
 	string getPowerSource(const vector<string> &arguments, boolean *dynamic);
@@ -43,7 +43,7 @@ private:
 	// network-related info
 	string getComputerName(boolean *dynamic);
 	string getHostName(boolean *dynamic);
-	string getIP(boolean *dynamic);
+	string getIP(const vector<string> &arguments, boolean *dynamic);
 	string getUserName(boolean *dynamic);
 
 	// Winamp info
@@ -54,6 +54,7 @@ private:
 	string getWinampStatus(boolean *dynamic);
 
 	// MotherBoard Monitor 5 (MBM5) info
+	string getMBMCPUUsage(const vector<string> &arguments, boolean *dynamic);
 	string getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic);
 	string getMBMTemperature(const vector<string> &arguments, boolean *dynamic);
 	string getMBMVoltage(const vector<string> &arguments, boolean *dynamic);
@@ -81,7 +82,7 @@ private:
 
 	void getDiskFreeSpace(const string &drive, largeInt &freeBytes, largeInt &totalBytes);
 
-	string formatByteSize(largeInt byteSize);
+	string formatByteSize(largeInt byteSize, largeInt total, int units);
 	string formatDateTime(const string &format, const SYSTEMTIME &st, int span);
 	void getLocalizedTime(SYSTEMTIME *pst, const string &timezone);
 

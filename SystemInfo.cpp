@@ -5,8 +5,15 @@
 #include "Label.h"
 
 const int numMBMTemperatures = 10;
-const int numMBMVoltages = 7;
-const int numMBMFans = 4;
+const int numMBMVoltages = 10;
+const int numMBMFans = 10;
+const int numMBMCPUs = 4;
+
+const int unitsDefault = 0;
+const int unitsKB = 1;
+const int unitsMB = 2;
+const int unitsGB = 3;
+const int unitsPercent = 4;
 
 struct MBMSharedData {
 	int temperature[numMBMTemperatures];
@@ -14,6 +21,7 @@ struct MBMSharedData {
 	int fan[numMBMFans];
 	int MHz;
 	unsigned char numCPUs;
+	double CPU[numMBMCPUs];
 };
 
 SystemInfo::SystemInfo()
@@ -191,17 +199,19 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 	else if(name == "date")
 		return getDate(arguments, dynamic);
 	else if(name == "diskavailable" && arguments.size() >= 1)
-		return getDiskAvailable(arguments[0], dynamic);
+		return getDiskAvailable(arguments, dynamic);
 	else if(name == "diskinuse" && arguments.size() >= 1)
-		return getDiskInUse(arguments[0], dynamic);
+		return getDiskInUse(arguments, dynamic);
 	else if(name == "disktotal" && arguments.size() >= 1)
-		return getDiskTotal(arguments[0], dynamic);
+		return getDiskTotal(arguments, dynamic);
 	else if(name == "hostname")
 		return getHostName(dynamic);
 	else if(name == "ip")
-		return getIP(dynamic);
+		return getIP(arguments, dynamic);
 	else if(name == "itime")
 		return getInternetTime(dynamic);
+	else if(name == "mbmcpuusage")
+		return getMBMCPUUsage(arguments, dynamic);
 	else if(name == "mbmfanspeed")
 		return getMBMFanSpeed(arguments, dynamic);
 	else if(name == "mbmtemperature")
@@ -209,11 +219,11 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 	else if(name == "mbmvoltage")
 		return getMBMVoltage(arguments, dynamic);
 	else if(name == "memavailable")
-		return getMemAvailable(dynamic);
+		return getMemAvailable(arguments, dynamic);
 	else if(name == "meminuse")
-		return getMemInUse(dynamic);
+		return getMemInUse(arguments, dynamic);
 	else if(name == "memtotal")
-		return getMemTotal(dynamic);
+		return getMemTotal(arguments, dynamic);
 	else if(name == "os")
 		return getOS(dynamic);
 	else if(name == "powersource")
@@ -221,11 +231,11 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 	else if(name == "randomline" && arguments.size() >= 1)
 		return getRandomLine(arguments[0], dynamic);
 	else if(name == "swapavailable")
-		return getSwapAvailable(dynamic);
+		return getSwapAvailable(arguments, dynamic);
 	else if(name == "swapinuse")
-		return getSwapInUse(dynamic);
+		return getSwapInUse(arguments, dynamic);
 	else if(name == "swaptotal")
-		return getSwapTotal(dynamic);
+		return getSwapTotal(arguments, dynamic);
 	else if(name == "time")
 		return getTime(arguments, dynamic);
 	else if(name == "uptime")
@@ -256,14 +266,22 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 		return beforeLast(arguments[0], arguments[1]);
 	else if(name == "between" && arguments.size() == 3)
 		return between(arguments[0], arguments[1], arguments[2]);
-	else if(name == "capitalize")
+	else if(name == "capitalize" && arguments.size() == 1)
 		return capitalize(arguments[0]);
-	else if(name == "lowercase")
+	else if(name == "lowercase" && arguments.size() == 1)
 		return lowerCase(arguments[0]);
-	else if(name == "trim")
+	else if(name == "trim" && arguments.size() == 1)
 		return trim(arguments[0]);
-	else if(name == "uppercase")
+	else if(name == "uppercase" && arguments.size() == 1)
 		return upperCase(arguments[0]);
+	else if(name == "kb") // units hack
+		return "1";
+	else if(name == "mb")
+		return "2";
+	else if(name == "gb")
+		return "3";
+	else if(name == "%")
+		return "4";
 	
 	return "[?]";
 }
@@ -301,7 +319,7 @@ string SystemInfo::process(const string &text, int &i, int length, Label *label,
 		vector<string> arguments;
 		
 		// retrieve name
-		while(i < length && (isalnum(text[i]) || text[i] == '-'))
+		while(i < length && (isalnum(text[i]) || text[i] == '-' || text[i] == '%'))
 			name.append(1, text[i++]);
 		
 		// skip whitespace
@@ -407,37 +425,49 @@ string SystemInfo::getInternetTime(boolean *dynamic)
 	return string(output);
 }
 
-string SystemInfo::getDiskAvailable(const string &drive, boolean *dynamic)
+string SystemInfo::getDiskAvailable(const vector<string> &arguments, boolean *dynamic)
 {
 	largeInt freeBytes;
 	largeInt totalBytes;
+	int units = unitsDefault;
 
-	getDiskFreeSpace(drive, freeBytes, totalBytes);
+	if(arguments.size() >= 2)
+		units = atoi(arguments[1].c_str());
+
+	getDiskFreeSpace(arguments[0], freeBytes, totalBytes);
 	
 	if(dynamic) *dynamic = true;
-	return formatByteSize(freeBytes);
+	return formatByteSize(freeBytes, totalBytes, units);
 }
 
-string SystemInfo::getDiskInUse(const string &drive, boolean *dynamic)
+string SystemInfo::getDiskInUse(const vector<string> &arguments, boolean *dynamic)
 {
 	largeInt freeBytes;
 	largeInt totalBytes;
+	int units = unitsDefault;
 
-	getDiskFreeSpace(drive, freeBytes, totalBytes);
+	if(arguments.size() >= 2)
+		units = atoi(arguments[1].c_str());
+
+	getDiskFreeSpace(arguments[0], freeBytes, totalBytes);
 	
 	if(dynamic) *dynamic = true;
-	return formatByteSize(totalBytes - freeBytes);
+	return formatByteSize(totalBytes - freeBytes, totalBytes, units);
 }
 
-string SystemInfo::getDiskTotal(const string &drive, boolean *dynamic)
+string SystemInfo::getDiskTotal(const vector<string> &arguments, boolean *dynamic)
 {
 	largeInt freeBytes;
 	largeInt totalBytes;
+	int units = unitsDefault;
 
-	getDiskFreeSpace(drive, freeBytes, totalBytes);
+	if(arguments.size() >= 2)
+		units = atoi(arguments[1].c_str());
+
+	getDiskFreeSpace(arguments[0], freeBytes, totalBytes);
 	
 	if(dynamic) *dynamic = true;
-	return formatByteSize(totalBytes);
+	return formatByteSize(totalBytes, totalBytes, units);
 }
 
 string SystemInfo::getHostName(boolean *dynamic)
@@ -452,46 +482,78 @@ string SystemInfo::getHostName(boolean *dynamic)
 	return "";
 }
 
-string SystemInfo::getIP(boolean *dynamic)
+string SystemInfo::getIP(const vector<string> &arguments, boolean *dynamic)
 {
 	char hostName[256];
 	gethostname(hostName, 256);
 	hostent *hostInfo = gethostbyname(hostName);
 
-	if(hostInfo)
-		return string(inet_ntoa(*((in_addr *) hostInfo->h_addr)));
-	
-	return "";
+	if(!hostInfo)
+		return "";
+
+	int numIPs = 0;
+
+	while(hostInfo->h_addr_list[numIPs])
+		numIPs++;
+
+	if(numIPs == 0)
+		return "";
+
+	int n = 0;
+	int value = 0;
+
+	if(arguments.size() >= 1)
+		n = atoi(arguments[0].c_str()) - 1;
+
+	if(n < 0) n = 0;
+	if(n >= numIPs) n = numIPs - 1;
+
+	return string(inet_ntoa(*((in_addr *) hostInfo->h_addr_list[n])));
 }
 
-string SystemInfo::getMemAvailable(boolean *dynamic)
+string SystemInfo::getMemAvailable(const vector<string> &arguments, boolean *dynamic)
 {
+	int units = unitsDefault;
+
+	if(arguments.size() >= 1)
+		units = atoi(arguments[0].c_str());
+
 	MEMORYSTATUS ms;
 	ms.dwLength = sizeof(MEMORYSTATUS);
 	GlobalMemoryStatus(&ms);
 
 	if(dynamic) *dynamic = true;
-	return formatByteSize(ms.dwAvailPhys);
+	return formatByteSize(ms.dwAvailPhys, ms.dwTotalPhys, units);
 }
 
-string SystemInfo::getMemInUse(boolean *dynamic)
+string SystemInfo::getMemInUse(const vector<string> &arguments, boolean *dynamic)
 {
+	int units = unitsDefault;
+
+	if(arguments.size() >= 1)
+		units = atoi(arguments[0].c_str());
+
 	MEMORYSTATUS ms;
 	ms.dwLength = sizeof(MEMORYSTATUS);
 	GlobalMemoryStatus(&ms);
 
 	if(dynamic) *dynamic = true;
-	return formatByteSize(ms.dwTotalPhys - ms.dwAvailPhys);
+	return formatByteSize(ms.dwTotalPhys - ms.dwAvailPhys, ms.dwTotalPhys, units);
 }
 
-string SystemInfo::getMemTotal(boolean *dynamic)
+string SystemInfo::getMemTotal(const vector<string> &arguments, boolean *dynamic)
 {
+	int units = unitsDefault;
+
+	if(arguments.size() >= 1)
+		units = atoi(arguments[0].c_str());
+
 	MEMORYSTATUS ms;
 	ms.dwLength = sizeof(MEMORYSTATUS);
 	GlobalMemoryStatus(&ms);
 
 	if(dynamic) *dynamic = true;
-	return formatByteSize(ms.dwTotalPhys);
+	return formatByteSize(ms.dwTotalPhys, ms.dwTotalPhys, units);
 }
 
 string SystemInfo::getOS(boolean *dynamic)
@@ -563,34 +625,49 @@ string SystemInfo::getRandomLine(const string &file, boolean *dynamic)
 	return "[Could not open file!]";
 }
 
-string SystemInfo::getSwapAvailable(boolean *dynamic)
+string SystemInfo::getSwapAvailable(const vector<string> &arguments, boolean *dynamic)
 {
+	int units = unitsDefault;
+
+	if(arguments.size() >= 1)
+		units = atoi(arguments[0].c_str());
+
 	MEMORYSTATUS ms;
 	ms.dwLength = sizeof(MEMORYSTATUS);
 	GlobalMemoryStatus(&ms);
 
 	if(dynamic) *dynamic = true;
-	return formatByteSize(ms.dwAvailPageFile);
+	return formatByteSize(ms.dwAvailPageFile, ms.dwTotalPageFile, units);
 }
 
-string SystemInfo::getSwapInUse(boolean *dynamic)
+string SystemInfo::getSwapInUse(const vector<string> &arguments, boolean *dynamic)
 {
+	int units = unitsDefault;
+
+	if(arguments.size() >= 1)
+		units = atoi(arguments[0].c_str());
+
 	MEMORYSTATUS ms;
 	ms.dwLength = sizeof(MEMORYSTATUS);
 	GlobalMemoryStatus(&ms);
 
 	if(dynamic) *dynamic = true;
-	return formatByteSize(ms.dwTotalPageFile - ms.dwAvailPageFile);
+	return formatByteSize(ms.dwTotalPageFile - ms.dwAvailPageFile, ms.dwTotalPageFile, units);
 }
 
-string SystemInfo::getSwapTotal(boolean *dynamic)
+string SystemInfo::getSwapTotal(const vector<string> &arguments, boolean *dynamic)
 {
+	int units = unitsDefault;
+
+	if(arguments.size() >= 1)
+		units = atoi(arguments[0].c_str());
+
 	MEMORYSTATUS ms;
 	ms.dwLength = sizeof(MEMORYSTATUS);
 	GlobalMemoryStatus(&ms);
 
 	if(dynamic) *dynamic = true;
-	return formatByteSize(ms.dwTotalPageFile);
+	return formatByteSize(ms.dwTotalPageFile, ms.dwTotalPageFile, units);
 }
 
 string SystemInfo::getTime(const vector<string> &arguments, boolean *dynamic)
@@ -789,6 +866,42 @@ string SystemInfo::getBattery(boolean *dynamic)
 // -----------------------------------
 //  MotherBoard Monitor 5 (MBM5) info
 // -----------------------------------
+
+string SystemInfo::getMBMCPUUsage(const vector<string> &arguments, boolean *dynamic)
+{
+	if(dynamic) *dynamic = 1;
+
+	int n = 0;
+	int value = 0;
+
+	if(arguments.size() >= 1)
+		n = atoi(arguments[0].c_str()) - 1;
+
+	if(n < 0) n = 0;
+	if(n >= numMBMCPUs) n = numMBMCPUs - 1;
+
+	HANDLE hSharedData = OpenFileMapping(FILE_MAP_READ,
+		FALSE,
+		"$M$B$M$5$D$");
+
+	if(hSharedData != INVALID_HANDLE_VALUE)
+	{
+		MBMSharedData *pSharedData = (MBMSharedData *) MapViewOfFile(hSharedData,
+			FILE_MAP_READ, 0, 0, 0);
+
+		if(pSharedData)
+		{
+			value = pSharedData->CPU[n];
+			UnmapViewOfFile(pSharedData);
+		}
+
+		CloseHandle(hSharedData);
+	}
+
+	char output[16];
+	sprintf(output, "%d", value);
+	return string(output);
+}
 
 string SystemInfo::getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic)
 {
@@ -1049,17 +1162,56 @@ static const char *units[] = {
 	"bytes", "KB", "MB", "GB", "TB", "PB", "EB"
 };
 
-string SystemInfo::formatByteSize(largeInt byteSize)
+string SystemInfo::formatByteSize(largeInt byteSize, largeInt total, int unit)
 {
+	char buffer[32];
+
+	if(unit == unitsPercent) {
+		sprintf(buffer, "%d", (byteSize * 100) / total);
+		return string(buffer);
+	}
+
+	/* if(unit == unitsKB) {
+		sprintf(buffer, "%lf", (double) (__int64) byteSize / 1024.0);
+		return string(buffer);
+	}
+	else if(unit == unitsMB) {
+		sprintf(buffer, "%lf", (double) (__int64)  byteSize / (1024.0 * 1024.0));
+		return string(buffer);
+	}
+	else if(unit == unitsGB) {
+		sprintf(buffer, "%lf", (double) (__int64)  byteSize / (1024.0 * 1024.0 * 1024.0));
+		return string(buffer);
+	}
+	else if(unit == unitsPercent) {
+		sprintf(buffer, "%d", (byteSize * 100) / total);
+		return string(buffer);
+	} */
+
 	largeInt i = 0;
-	
-	if(byteSize & 0xF000000000000000) i++;
-	if(byteSize & 0xFFFC000000000000) i++;
-	if(byteSize & 0xFFFFFF0000000000) i++;
-	if(byteSize & 0xFFFFFFFFC0000000) i++;
-	if(byteSize & 0xFFFFFFFFFFF00000) i++;
-	if(byteSize & 0xFFFFFFFFFFFFFC00) i++;
-	
+	boolean addUnits = true;
+
+	if(unit == unitsKB) {
+		i = 1;
+		addUnits = false;
+	}
+	else if(unit == unitsMB) {
+		i = 2;
+		addUnits = false;
+	}
+	else if(unit == unitsGB) {
+		i = 3;
+		addUnits = false;
+	}
+	else {
+		if(byteSize & 0xF000000000000000) i++;
+		if(byteSize & 0xFFFC000000000000) i++;
+		if(byteSize & 0xFFFFFF0000000000) i++;
+		if(byteSize & 0xFFFFFFFFC0000000) i++;
+		if(byteSize & 0xFFFFFFFFFFF00000) i++;
+		if(byteSize & 0xFFFFFFFFFFFFFC00) i++;
+	}
+
 	largeInt divisor = 1 << (i * 10);
 	largeInt quotient = byteSize / divisor;
 	largeInt remainder = ((byteSize % divisor) * 100) / divisor;
@@ -1069,12 +1221,15 @@ string SystemInfo::formatByteSize(largeInt byteSize)
 	else if(quotient >= 100)
 		remainder = 0;
 
-	char buffer[32];
-
 	if(remainder > 0)
-		wsprintf(buffer, "%d.%02d %s", (int) quotient, (int) remainder, units[i]);
+		wsprintf(buffer, "%d.%02d", (int) quotient, (int) remainder);
 	else
-		wsprintf(buffer, "%d %s", (int) quotient, units[i]);
+		wsprintf(buffer, "%d", (int) quotient);
+
+	if(addUnits) {
+		strcat(buffer, " ");
+		strcat(buffer, units[i]);
+	}
 
 	return string(buffer);
 }

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
-                                Label 1.8
+                                Label 1.9
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
-                        Last Modified: 08-25-2001
+                        Last Modified: 11-06-2001
 --------------------------------------------------------------------------
 
 Overview
@@ -359,13 +359,13 @@ Current total CPU usage percent.
 date('format')
 Current local date. Format is optional and is explained below.
 
-diskAvailable('drive')
+diskAvailable('drive', units)
 Amount of space currently available on given drive.
 
-diskInUse('drive')
+diskInUse('drive', units)
 Amount of space currently in use on given drive.
 
-diskTotal('drive')
+diskTotal('drive', units)
 Total amount of space on given drive.
 
 hostName
@@ -377,9 +377,13 @@ Internet Procotol (IP) address assigned to this computer.
 iTime
 Current time as Swatch internet time (beats).
 
+mbmCPUUsage
+CPU usage as reported by MBM5. Takes an optional numeric index as a
+parameter. MBM5 supports 4 CPUs numbered 1 to 4.
+
 mbmFanSpeed
 Fan speed as reported by MBM5. Takes an optional numeric index as a
-parameter. MBM5 supports 4 fans numbered 1 to 4.
+parameter. MBM5 supports 10 fans numbered 1 to 10.
 
 mbmTemperature
 Temperature as reported by MBM5. Takes an optional numeric index as a
@@ -387,15 +391,15 @@ parameter. MBM5 supports 10 temperature sensors numbered 1 to 10.
 
 mbmVoltage
 Voltage as reported by MBM5. Takes an optional numeric index as a
-parameter. MBM5 supports 7 voltages numbered 1 to 7.
+parameter. MBM5 supports 10 voltages numbered 1 to 10.
 
-memAvailable
+memAvailable(units)
 Amount of physical memory currently available.
 
-memInUse
+memInUse(units)
 Amount of physical memory currently in use.
 
-memTotal
+memTotal(units)
 Total amount of physical memory in the system.
 
 os
@@ -408,13 +412,13 @@ or battery power. Defaults are 'AC' and 'Battery'.
 randomLine('file')
 Retrieves a randomly selected line from the given file.
 
-swapAvailable
+swapAvailable(units)
 Amount of swap space currently available.
 
-swapInUse
+swapInUse(units)
 Amount of swap space currently in use.
 
-swapTotal
+swapTotal(units)
 Total amount of swap space in the system.
 
 time('format')
@@ -520,6 +524,24 @@ modifies the timezone used. Here are some examples:
 
 UTC means coordinated universal time and is loosely defined as the current
 date and time in Greenwich, England.
+
+Data sources that return a size in bytes (mem, swap, etc) take an optional
+parameter that specifies the units to use. Legal values are KB, MB, GB, and
+% (percent). If no units are given then the units are automatically
+selected based on the current value. For example, if 24 MB of memory are
+free (out of 64 MB total):
+
+[memAvailable(KB)] --> 24576
+[memAvailable(MB)] --> 24
+[memAvailable(GB)] --> 0.02
+[memAvailable(%)]  --> 38
+
+Note that when you use specific units, the unit labels are not added for
+you, but when the units are implicit they are.
+
+MotherBoard Monitor: As of version 1.9 of Label the MBM data sources
+[mbm*] require MBM version 5.1 (or higher). Due to the nature of the
+changes this makes Label 1.9 incompatible with earlier versions of MBM.
 
 
 Default Configurations using AllLabels
