@@ -24,47 +24,89 @@ void ToggleBangCommand(HWND caller, const char *bangCommandName, const char *arg
 void UpdateBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 void ClipboardBangCommand(HWND caller, const char *bangCommandName, const char *arguments);
 
-// bang commands implemented by this module
-struct { const char *name; BangCommandEx *function; } bangCommands[] = {
+struct bangcmddef {			// FIXME: move into .h?
+	const char *Name;
+	BangCommandEx *Command;
+};
+
+bangcmddef MinimalBangs[] = {
+	{ "!%sHide", HideBangCommand },
+	{ "!%sShow", ShowBangCommand },
+	{ NULL, NULL }
+};
+
+bangcmddef FullBangs[] = {
 	{ "!%sAlwaysOnTop", AlwaysOnTopBangCommand },
 	{ "!%sDestroy", DestroyBangCommand },
-	{ "!%sHide", HideBangCommand },
 	{ "!%sMove", MoveBangCommand },
 	{ "!%sPinToDesktop", PinToDesktopBangCommand },
 	{ "!%sReposition", RepositionBangCommand },
 	{ "!%sResize", ResizeBangCommand },
 	{ "!%sSetFontColor", SetFontColorBangCommand },
 	{ "!%sSetText", SetTextBangCommand },
-	{ "!%sShow", ShowBangCommand },
 	{ "!%sToggleAlwaysOnTop", ToggleAlwaysOnTopBangCommand },
 	{ "!%sToggle", ToggleBangCommand },
 	{ "!%sUpdate", UpdateBangCommand },
-	{ "!%sClipboard", ClipboardBangCommand }
+	{ "!%sClipboard", ClipboardBangCommand },
+	{ NULL, NULL }
 };
 
-const int bangCommandCount = sizeof(bangCommands) / sizeof(bangCommands[0]);
-
 // add bang commands for the label identified by 'labelName'
-void AddBangCommands(const string &labelName)
+void AddBangCommands(const string &labelName, int &bangs)
 {
-	for(int i = 0; i < bangCommandCount; i++)
-	{
-		char name[64];
-		wsprintf(name, bangCommands[i].name, labelName.c_str());
+	// register !Bang Commands
+	// code taken from RabidModuleBangs
 
-		AddBangCommandEx(name, bangCommands[i].function);
+	bangcmddef *pBang;
+
+	if (bangs) {
+		pBang = MinimalBangs;
+		while (pBang->Name != NULL) {
+			char name[64];
+
+			wsprintf(name, pBang->Name, labelName.c_str());
+			AddBangCommandEx(name, pBang->Command);
+			pBang++;
+		}
+
+		if (bangs==5) {
+			pBang = FullBangs;
+			while (pBang->Name != NULL) {
+				char name[64];
+
+				wsprintf(name, pBang->Name, labelName.c_str());
+				AddBangCommandEx(name, pBang->Command);
+				pBang++;
+			}
+		}
 	}
 }
 
 // remove bang commands for a label
-void RemoveBangCommands(const string &labelName)
+void RemoveBangCommands(const string &labelName, int &bangs)
 {
-	for(int i = 0; i < bangCommandCount; i++)
-	{
-		char name[64];
-		wsprintf(name, bangCommands[i].name, labelName.c_str());
+	bangcmddef *pBang;
 
-		RemoveBangCommand(name);
+	if (bangs) {
+		pBang = MinimalBangs;
+		while (pBang->Name != NULL) {
+			char name[64];
+
+			wsprintf(name, pBang->Name, labelName.c_str());
+			RemoveBangCommand(name);
+			pBang++;
+		}
+
+		if (bangs==5) {
+			pBang = FullBangs;
+			while (pBang->Name != NULL) {
+				char name[64];
+
+				wsprintf(name, pBang->Name, labelName.c_str());
+				RemoveBangCommand(name);
+				pBang++;
+			}
+		}
 	}
 }
 

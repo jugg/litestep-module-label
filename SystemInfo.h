@@ -56,7 +56,7 @@ private:
 	// MotherBoard Monitor 5 (MBM5) info
 	string getMBMCPUUsage(const vector<string> &arguments, boolean *dynamic);
 	string getMBMFanSpeed(const vector<string> &arguments, boolean *dynamic);
-	string getMBMTemperature(const vector<string> &arguments, boolean *dynamic);
+	string getMBMTemperature(const vector<string> &arguments, boolean *dynamic, boolean &bUseFahrenheit);
 	string getMBMVoltage(const vector<string> &arguments, boolean *dynamic);
 
 	// miscellaneous info

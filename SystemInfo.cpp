@@ -215,7 +215,7 @@ string SystemInfo::evaluateFunction(const string &functionName, const vector<str
 	else if(name == "mbmfanspeed")
 		return getMBMFanSpeed(arguments, dynamic);
 	else if(name == "mbmtemperature")
-		return getMBMTemperature(arguments, dynamic);
+		return getMBMTemperature(arguments, dynamic, label->bUseFahrenheit);
 	else if(name == "mbmvoltage")
 		return getMBMVoltage(arguments, dynamic);
 	else if(name == "memavailable")
@@ -939,12 +939,12 @@ string SystemInfo::getMBMFanSpeed(const vector<string> &arguments, boolean *dyna
 	return string(output);
 }
 
-string SystemInfo::getMBMTemperature(const vector<string> &arguments, boolean *dynamic)
+string SystemInfo::getMBMTemperature(const vector<string> &arguments, boolean *dynamic, boolean &bUseFahrenheit)
 {
 	if(dynamic) *dynamic = 1;
 
 	int n = 0;
-	int value = 0;
+	float value = 0;
 
 	if(arguments.size() >= 1)
 		n = atoi(arguments[0].c_str()) - 1;
@@ -970,8 +970,13 @@ string SystemInfo::getMBMTemperature(const vector<string> &arguments, boolean *d
 		CloseHandle(hSharedData);
 	}
 
+	if (bUseFahrenheit) {
+		value = value * 9 / 5 + 32;
+	}
+
 	char output[16];
-	sprintf(output, "%d", value);
+	sprintf(output, "%.0f", value);
+
 	return string(output);
 }
 

@@ -15,6 +15,7 @@ public:
 
 	boolean alwaysOnTop;
 	boolean startHidden;
+	boolean bUseFahrenheit;
 
 	Texture *skin;
 	Font *font;
@@ -24,6 +25,7 @@ public:
 	int rightBorder;
 	int bottomBorder;
 
+	int bangCommands;
 	int justify;
 	int updateInterval;
 

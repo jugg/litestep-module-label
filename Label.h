@@ -19,9 +19,12 @@ public:
 
 	boolean isAlwaysOnTop() const { return alwaysOnTop; }
 	boolean isVisible() const { return visible; }
+	boolean bUseFahrenheit;
 
 	HWND getBox() const { return box; }
 
+	int bangCommands;		// probably shouldn't be public but i'm lazy...
+	
 	int getHeight() const { return height; }
 	int getWidth() const { return width; }
 	int getX() const { return x; }

@@ -1,8 +1,9 @@
 --------------------------------------------------------------------------
-                                Label 1.92
+                                Label 1.93
                Kevin Schaffer (Maduin) <kschaffe@kent.edu>
                Erik Christiansson (Sci) <erik@alfafish.com>
-                        Last Modified: 01-30-2002
+                        ilmcuts <ilmcuts@gmx.net>
+                        Last Modified: 05-12-2002
 --------------------------------------------------------------------------
 
 Overview
@@ -163,6 +164,16 @@ LabelUpdateInterval <number>
 Sets the amount of time in milliseconds between updates for labels that
 contain dynamically updated content. If no value is provided then the
 default is 1000 (1 second).
+
+LabelBangCommands "none", "minimal", or "all"
+Controls the number of !bangs Label registers. "none" will register no !bangs
+except for the label-core !bangs !labelcreate, !labeldebug and !labellsboxhook.
+"minimal" will register !LabelShow and !LabelHide, while "all" will register,
+all !bangs. If no value is provided then the default is "all".
+
+LabelUseFahrenheit
+If this command is present, mbmTemperature (see below) is diplayed in
+Fahrenheit instead of Celsius.
 
 LabelLSBoxName <name>
 Sets the name of the box (lsbox.dll) that this label should be loaded

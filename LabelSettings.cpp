@@ -10,6 +10,13 @@ NameValuePair justifyValues[] = {
 	{ 0, 0 }
 };
 
+NameValuePair bangCommandValues[] = {
+	{ "none", 0 },
+	{ "minimal", 1 },
+	{ "all", 5 },
+	{ 0, 0 }
+};
+
 LabelSettings::LabelSettings()
 {
 	const char *name = "AllLabels";
@@ -17,6 +24,7 @@ LabelSettings::LabelSettings()
 
 	alwaysOnTop = GetRCBoolean(name, "AlwaysOnTop");
 	startHidden = GetRCBoolean(name, "StartHidden");
+	bUseFahrenheit = GetRCBoolean(name, "UseFahrenheit");
 
 	skin = GetRCTexture(name, "");
 	font = GetRCFont(name, "");
@@ -25,6 +33,8 @@ LabelSettings::LabelSettings()
 	topBorder = GetRCInt(name, "TopBorder", 0);
 	rightBorder = GetRCInt(name, "RightBorder", 0);
 	bottomBorder = GetRCInt(name, "BottomBorder", 0);
+
+	bangCommands = GetRCNamedValue(name, "BangCommands", bangCommandValues, 5);
 
 	justify = GetRCNamedValue(name, "Justify", justifyValues, DT_CENTER);
 	updateInterval = GetRCInt(name, "UpdateInterval", 1000);
@@ -55,6 +65,7 @@ LabelSettings::LabelSettings(const char *name)
 
 	alwaysOnTop = GetRCBoolean(name, "AlwaysOnTop", defaultSettings.alwaysOnTop);
 	startHidden = GetRCBoolean(name, "StartHidden", defaultSettings.startHidden);
+	bUseFahrenheit = GetRCBoolean(name, "UseFahrenheit", defaultSettings.bUseFahrenheit);
 
 	skin = GetRCTexture(name, "", defaultSettings.skin);
 	font = GetRCFont(name, "", defaultSettings.font);
@@ -63,6 +74,8 @@ LabelSettings::LabelSettings(const char *name)
 	topBorder = GetRCInt(name, "TopBorder", defaultSettings.topBorder);
 	rightBorder = GetRCInt(name, "RightBorder", defaultSettings.rightBorder);
 	bottomBorder = GetRCInt(name, "BottomBorder", defaultSettings.bottomBorder);
+
+	bangCommands = GetRCNamedValue(name, "BangCommands", bangCommandValues, defaultSettings.bangCommands);
 
 	justify = GetRCNamedValue(name, "Justify", justifyValues, defaultSettings.justify);
 	updateInterval = GetRCInt(name, "UpdateInterval", defaultSettings.updateInterval);

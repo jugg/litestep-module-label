@@ -1,3 +1,8 @@
+1.93, 04-07-2002/05-12-2002 (ilmcuts)
+- added LabelBangCommands
+- added LabelUseFahrenheit
+- a & in the LabelText will actually be displayed as &
+
 1.92, 01-30-2002 (Sci)
 - added support for lsbox (merged code by blkhawk from 1.8a)
 

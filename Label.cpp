@@ -32,12 +32,11 @@ Label::Label(const string &name)
 	background = 0;
 	font = 0;
 
-	AddBangCommands(name);
 }
 
 Label::~Label()
 {
-	RemoveBangCommands(name);
+	RemoveBangCommands(name, bangCommands);
 
 	if(hWnd != 0)
 		DestroyWindow(hWnd);
@@ -66,6 +65,8 @@ void Label::load(HINSTANCE hInstance, HWND box)
 	this->box = box;
 
 	reconfigure();
+	
+	AddBangCommands(name, bangCommands);
 }
 
 void Label::reconfigure()
@@ -74,6 +75,9 @@ void Label::reconfigure()
 
 	setAlwaysOnTop(settings.alwaysOnTop);
 	reposition(settings.x, settings.y, settings.width, settings.height);
+
+	bUseFahrenheit = settings.bUseFahrenheit;
+	bangCommands = settings.bangCommands;
 
 	setBackground(settings.skin);
 	setFont(settings.font);
@@ -512,7 +516,7 @@ void Label::onPaint(HDC hDC)
 		width - leftBorder - rightBorder,
 		height - topBorder - bottomBorder,
 		text,
-		justify /* | DT_SINGLELINE */ | DT_VCENTER);
+		justify /* | DT_SINGLELINE */ | DT_VCENTER | DT_NOPREFIX);
 
 	// blt the double buffer to the display
 	BitBlt(hDC, 0, 0, width, height, bufferDC, 0, 0, SRCCOPY);

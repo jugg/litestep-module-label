@@ -1,8 +1,8 @@
 #if !defined(__BANGCOMMANDS_H)
 #define __BANGCOMMANDS_H
 
-void AddBangCommands(const string &labelName);
-void RemoveBangCommands(const string &labelName);
+void AddBangCommands(const string &labelName, int &bangs);
+void RemoveBangCommands(const string &labelName, int &bangs);
 
 void CreateLabelBangCommand(HWND caller, const char *arguments);
 //LsBox Support - blkhawk
